@@ -91,9 +91,9 @@ def add_date_labels(axes, min_date, max_date):
     axes.set_xlim(min_date, max_date)
     date_range = max_date - min_date
 
-    # If date range is more than 2 hours, label each hour
+    # If date range is more than 2 hours, label every 30 minutes
     if date_range > timedelta(hours=2):
-        axes.xaxis.set_major_locator(dates.HourLocator())
+        axes.xaxis.set_major_locator(dates.MinuteLocator(interval=30))
 
     # If date range is more than 30 minutes, label 10-minute increments
     elif date_range > timedelta(minutes=30):
@@ -183,11 +183,26 @@ def do_graph(csvfile, x_expr, y_exprs, title=''):
         lines.append(line)
 
     # Draw a legend for the figure
-    legend = figure.legend(lines, y_columns, 'lower center')
-    #legend.get_frame().set_alpha(0.5)
+    short_labels = shorten_labels(y_columns)
+    legend = figure.legend(lines, short_labels, 'lower center',
+        prop={'size': 9}, ncol=3)
 
     # Show the graph viewer
     pylab.show()
+
+
+def shorten_labels(labels):
+    """Given a list of column labels of the form "\A\B\C", return
+    a new list of labels with any common A, B, C parts.
+    """
+    # Don't try to shorten fewer than 2 labels
+    if len(labels) < 2:
+        return labels
+    split_labels = (label.split('\\') for label in labels)
+    transposed = zip(*split_labels)
+    while len(set(transposed[0])) == 1:
+        transposed.pop(0)
+    return ['\\'.join(parts) for parts in zip(*transposed)]
 
 
 # Main program
