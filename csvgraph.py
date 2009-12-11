@@ -14,7 +14,10 @@ one or more column names.
 
 Options:
 
-    -title "TITLE"      Title label for the graph
+    -title "Title"
+        Set the title label for the graph. Default: No title.
+    -save "filename.(png|svg|pdf)"
+        Save the graph to a file. Default: Show the graph in a viewer.
 
 At least one X-column and one Y-column must be provided; if any Y-column
 expression matches multiple column names, and/or if multiple Y-column
@@ -38,7 +41,7 @@ def usage_error(message):
     """Print a usage error, along with a custom message, then exit.
     """
     print(usage)
-    print(message)
+    print('*** ' + message)
     sys.exit(1)
 
 
@@ -140,7 +143,7 @@ def read_csv_values(reader, x_column, y_columns):
     return x_values, y_values, x_is_date
 
 
-def do_graph(csvfile, x_expr, y_exprs, title=''):
+def do_graph(csvfile, x_expr, y_exprs, title='', save_file=''):
     """Generate a graph from `csvfile`, with `x_expr` defining the x-axis,
     and `y_exprs` being columns to get y-values from.
     """
@@ -187,8 +190,17 @@ def do_graph(csvfile, x_expr, y_exprs, title=''):
     legend = figure.legend(lines, short_labels, 'lower center',
         prop={'size': 9}, ncol=3)
 
-    # Show the graph viewer
-    pylab.show()
+    # If save_file was provided, write output to the given filename
+    if save_file:
+        ext = save_file[-3:]
+        if ext not in ('png',  'svg', 'pdf'):
+            print("File extension '%s' unknown. Assuming 'png'." % ext)
+            ext = 'png'
+        figure.savefig(save_file, format=ext)
+        print("Saved '%s' in '%s' format." % (save_file, ext))
+    # Otherwise, just show the graph viewer
+    else:
+        pylab.show()
 
 
 def shorten_labels(labels):
@@ -213,12 +225,17 @@ if __name__ == '__main__':
         args = sys.argv[1:]
 
     title = ''
+    save_file = ''
 
     # Get -options
     while args[0].startswith('-'):
-        arg = args.pop(0)
-        if arg == '-title':
+        opt = args.pop(0)
+        if opt == '-title':
             title = args.pop(0)
+        elif opt == '-save':
+            save_file = args.pop(0)
+        else:
+            usage_error("Unknown option: %s" % arg)
 
     # Get positional arguments
     csvfile = args.pop(0)
@@ -226,6 +243,6 @@ if __name__ == '__main__':
     y_exprs = args
 
     # Generate the graph
-    do_graph(csvfile, x_expr, y_exprs, title)
+    do_graph(csvfile, x_expr, y_exprs, title, save_file)
 
 
