@@ -18,6 +18,13 @@ Options:
         Set the title label for the graph. Default: No title.
     -save "filename.(png|svg|pdf)"
         Save the graph to a file. Default: Show the graph in a viewer.
+    -dateformat "<format string>"
+        Interpret the X-column as a date in the given format. Examples:
+            %m/%d/%y %I:%M:%S %p: 12/10/09 3:45:56 PM (Grinder logs)
+            %m/%d/%Y %H:%M:%S.%f: 2009/12/10 15:45:56.789 (Perfmon)
+        See http://docs.python.org/library/datetime.html for valid formats.
+        The Perfmon date format is the default. If the X-column
+        is NOT a date, use -dateformat ""
 
 At least one X-column and one Y-column must be provided; if any Y-column
 expression matches multiple column names, and/or if multiple Y-column
@@ -43,12 +50,6 @@ def usage_error(message):
     print(usage)
     print('*** ' + message)
     sys.exit(1)
-
-
-def to_datetime(dt_string, format='%m/%d/%Y %H:%M:%S.%f'):
-    """Convert a given date/time string to a `datetime` object.
-    """
-    return datetime.strptime(dt_string, format)
 
 
 def float_or_0(value):
@@ -114,23 +115,18 @@ def add_date_labels(axes, min_date, max_date):
     axes.xaxis.set_major_formatter(dates.DateFormatter('%H:%M'))
 
 
-def read_csv_values(reader, x_column, y_columns):
+def read_csv_values(reader, x_column, y_columns, date_format=''):
     """Read values from a csv `DictReader`, and return all values in
     `x_column` and `y_columns`.
     """
-    x_is_date = False
     x_values = []
     y_values = {}
     for row in reader:
         x_value = row[x_column]
-        # Try converting X value to datetime
-        try:
-            x_value = to_datetime(x_value)
-        # If not a date, treat as a float
-        except ValueError:
-            x_value = float_or_0(x_value)
+        if date_format:
+            x_value = datetime.strptime(x_value, date_format)
         else:
-            x_is_date = True
+            x_value = float_or_0(x_value)
 
         x_values.append(x_value)
 
@@ -140,10 +136,10 @@ def read_csv_values(reader, x_column, y_columns):
                 y_values[y_col] = []
             y_values[y_col].append(float_or_0(row[y_col]))
 
-    return x_values, y_values, x_is_date
+    return x_values, y_values
 
 
-def do_graph(csvfile, x_expr, y_exprs, title='', save_file=''):
+def do_graph(csvfile, x_expr, y_exprs, title='', save_file='', date_format=''):
     """Generate a graph from `csvfile`, with `x_expr` defining the x-axis,
     and `y_exprs` being columns to get y-values from.
     """
@@ -163,7 +159,8 @@ def do_graph(csvfile, x_expr, y_exprs, title='', save_file=''):
         sys.exit(0)
 
     # Read each row in the .csv file and populate x and y value lists
-    x_values, y_values, x_is_date = read_csv_values(reader, x_column, y_columns)
+    x_values, y_values = read_csv_values(reader,
+        x_column, y_columns, date_format)
 
     # Create the figure and plot
     figure = pylab.figure()
@@ -174,7 +171,7 @@ def do_graph(csvfile, x_expr, y_exprs, title='', save_file=''):
         figure.suptitle(title, fontsize=18)
 
     # Do date formatting if the X column was a date field
-    if x_is_date:
+    if date_format:
         min_date, max_date = min(x_values), max(x_values)
         add_date_labels(axes, min_date, max_date)
         figure.autofmt_xdate()
@@ -226,6 +223,7 @@ if __name__ == '__main__':
 
     title = ''
     save_file = ''
+    date_format = '%m/%d/%Y %H:%M:%S.%f' # Perfmon format
 
     # Get -options
     while args[0].startswith('-'):
@@ -234,6 +232,8 @@ if __name__ == '__main__':
             title = args.pop(0)
         elif opt == '-save':
             save_file = args.pop(0)
+        elif opt == '-dateformat':
+            date_format = args.pop(0)
         else:
             usage_error("Unknown option: %s" % arg)
 
@@ -243,6 +243,6 @@ if __name__ == '__main__':
     y_exprs = args
 
     # Generate the graph
-    do_graph(csvfile, x_expr, y_exprs, title, save_file)
+    do_graph(csvfile, x_expr, y_exprs, title, save_file, date_format)
 
 
