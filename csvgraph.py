@@ -48,7 +48,14 @@ def usage_error(message):
     """Print a usage error, along with a custom message, then exit.
     """
     print(usage)
-    print('*** ' + message)
+    print('*** %s' % message)
+    sys.exit(1)
+
+
+def runtime_error(message):
+    """Print an error message, then exit.
+    """
+    print('*** Error: %s' % message)
     sys.exit(1)
 
 
@@ -149,8 +156,8 @@ def do_graph(csvfile, x_expr, y_exprs, title='', save_file='', date_format=''):
     # Attempt to match column names
     try:
         x_column, y_columns = match_columns(x_expr, y_exprs, reader.fieldnames)
-    except NoMatch, err:
-        usage_error(err)
+    except NoMatch as err:
+        runtime_error(err)
 
     # Confirm with the user
     answer = raw_input("Graph these %d columns? " % len(y_columns))
