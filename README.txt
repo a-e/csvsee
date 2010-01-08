@@ -5,12 +5,14 @@ The ``csvgraph.py`` script in this folder is designed to generate graphs of
 comma-separated (.csv) data files, particularly those created by the
 Windows Performance Monitor tool.
 
-Prerequisites:
+Dependencies:
 
   Python:
-    http://www.python.org/download/
-  Matplotlib:
-    http://matplotlib.sourceforge.net/
+    http://python.org/download/
+  matplotlib:
+    http://sourceforge.net/projects/matplotlib/files/matplotlib/matplotlib-0.99.1/
+  NumPy:
+    http://sourceforge.net/projects/numpy/files/
 
 You may want to copy the ``csvgraph.py`` script somewhere on your system path
 for easier execution. Run the script without arguments to see usage notes.

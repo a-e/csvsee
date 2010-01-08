@@ -146,7 +146,21 @@ def read_csv_values(reader, x_column, y_columns, date_format=''):
     return x_values, y_values
 
 
-def do_graph(csvfile, x_expr, y_exprs, title='', save_file='', date_format=''):
+def add_annotations(figure, axes, annotation_file):
+    # Draw a vertical line
+    annot_lines = [
+        axes.axvline(x_values[4]),
+        axes.axvline(x_values[8]),
+    ]
+    annot_labels = [
+        'Hello world',
+        'Goodbye cruel world',
+    ]
+    annot_legend = figure.legend(annot_lines, annot_labels,
+        prop={'size': 9})
+
+
+def do_graph(csvfile, x_expr, y_exprs, title='', save_file='', date_format='', annotation_file=''):
     """Generate a graph from `csvfile`, with `x_expr` defining the x-axis,
     and `y_exprs` being columns to get y-values from.
     """
@@ -188,6 +202,10 @@ def do_graph(csvfile, x_expr, y_exprs, title='', save_file='', date_format=''):
     for y_col in y_columns:
         line = axes.plot(x_values, y_values[y_col])
         lines.append(line)
+
+    # Add annotations if filename was provided
+    if annotation_file:
+        add_annotations(figure, axes, annotation_file)
 
     # Draw a legend for the figure
     short_labels = shorten_labels(y_columns)
