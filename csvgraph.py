@@ -21,10 +21,18 @@ Options:
     -dateformat "<format string>"
         Interpret the X-column as a date in the given format. Examples:
             %m/%d/%y %I:%M:%S %p: 12/10/09 3:45:56 PM (Grinder logs)
-            %m/%d/%Y %H:%M:%S.%f: 2009/12/10 15:45:56.789 (Perfmon)
+            %m/%d/%Y %H:%M:%S.%f: 12/10/2009 15:45:56.789 (Perfmon)
         See http://docs.python.org/library/datetime.html for valid formats.
         The Perfmon date format is the default. If the X-column
         is NOT a date, use -dateformat ""
+    -linestyle "<format string>"
+        Define the style of lines plotted on the graph. Examples are:
+            "-"  Solid line (Default)
+            "."  Point marker
+            "o"  Circle marker
+            "o-" Circle + solid lines
+        See the Matplotlib Axes.plot documentation for available styles:
+        http://matplotlib.sourceforge.net/api/axes_api.html#matplotlib.axes.Axes.plot
 
 At least one X-column and one Y-column must be provided; if any Y-column
 expression matches multiple column names, and/or if multiple Y-column
@@ -101,9 +109,19 @@ def add_date_labels(axes, min_date, max_date):
     """
     axes.set_xlim(min_date, max_date)
     date_range = max_date - min_date
+    date_format = '%H:%M'
+
+    # If date range is more than 2 days, label each day
+    if date_range > timedelta(days=2):
+        axes.xaxis.set_major_locator(dates.HourLocator(interval=24))
+        date_format = '%b %d'
+
+    # If date range is more than 24 hours, label every 12 hours
+    elif date_range > timedelta(hours=24):
+        axes.xaxis.set_major_locator(dates.HourLocator(interval=12))
 
     # If date range is more than 2 hours, label every 30 minutes
-    if date_range > timedelta(hours=2):
+    elif date_range > timedelta(hours=2):
         axes.xaxis.set_major_locator(dates.MinuteLocator(interval=30))
 
     # If date range is more than 30 minutes, label 10-minute increments
@@ -119,7 +137,7 @@ def add_date_labels(axes, min_date, max_date):
         axes.xaxis.set_major_locator(dates.MinuteLocator())
 
     # Use HH:MM format for all labels
-    axes.xaxis.set_major_formatter(dates.DateFormatter('%H:%M'))
+    axes.xaxis.set_major_formatter(dates.DateFormatter(date_format))
 
 
 def read_csv_values(reader, x_column, y_columns, date_format=''):
@@ -146,7 +164,7 @@ def read_csv_values(reader, x_column, y_columns, date_format=''):
     return x_values, y_values
 
 
-def add_annotations(figure, axes, annotation_file):
+def add_notes(figure, axes, notes_file):
     # Draw a vertical line
     annot_lines = [
         axes.axvline(x_values[4]),
@@ -160,7 +178,8 @@ def add_annotations(figure, axes, annotation_file):
         prop={'size': 9})
 
 
-def do_graph(csvfile, x_expr, y_exprs, title='', save_file='', date_format='', annotation_file=''):
+def do_graph(csvfile, x_expr, y_exprs, title='', save_file='',
+    date_format='', line_style='-'):
     """Generate a graph from `csvfile`, with `x_expr` defining the x-axis,
     and `y_exprs` being columns to get y-values from.
     """
@@ -200,12 +219,12 @@ def do_graph(csvfile, x_expr, y_exprs, title='', save_file='', date_format='', a
     # Plot lines for all Y columns
     lines = []
     for y_col in y_columns:
-        line = axes.plot(x_values, y_values[y_col])
+        line = axes.plot(x_values, y_values[y_col], line_style)
         lines.append(line)
 
-    # Add annotations if filename was provided
-    if annotation_file:
-        add_annotations(figure, axes, annotation_file)
+    # Add annotations if filename was provided (not implemented yet)
+    #if notes_file:
+    #    add_notes(figure, axes, notes_file)
 
     # Draw a legend for the figure
     short_labels = shorten_labels(y_columns)
@@ -259,6 +278,8 @@ if __name__ == '__main__':
             save_file = args.pop(0)
         elif opt == '-dateformat':
             date_format = args.pop(0)
+        elif opt == '-linestyle':
+            line_style = args.pop(0)
         else:
             usage_error("Unknown option: %s" % arg)
 
@@ -268,6 +289,6 @@ if __name__ == '__main__':
     y_exprs = args
 
     # Generate the graph
-    do_graph(csvfile, x_expr, y_exprs, title, save_file, date_format)
+    do_graph(csvfile, x_expr, y_exprs, title, save_file, date_format, line_style)
 
 
