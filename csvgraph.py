@@ -45,10 +45,11 @@ format. Otherwise, all columns must be numeric (integer or floating-point).
 
 import csv
 import sys
+import re
 from datetime import datetime, timedelta
 import pylab
 from matplotlib import dates
-import re
+
 
 class NoMatch (Exception): pass
 
@@ -68,7 +69,7 @@ def runtime_error(message):
 
 
 def float_or_0(value):
-    """Try to convert ``value`` to a floating-point number. If
+    """Try to convert `value` to a floating-point number. If
     conversion fails, return 0.
     """
     try:
@@ -77,68 +78,59 @@ def float_or_0(value):
         return 0
 
 
-def match_columns(x_expr, y_exprs, fieldnames):
-    """Match ``x_expr`` and ``y_exprs`` to all available column
-    names in ``fieldnames``. Return the matched ``x_column`` and
-    ``y_columns``. If no matches are found for any expression,
-    raise a ``NoMatch`` exception.
+def strip_prefix(strings):
+    """Strip a common prefix from a sequence of strings.
+    Return `(prefix, stripped)` where `prefix` is the string that
+    is common, and `stripped` is strings with the prefix removed.
     """
-    def _matches(expr):
-        """Return a list of matching column names for ``expr``,
-        or raise a ``NoMatch`` exception if there were none.
-        """
-        # Do backslash-escape of expressions
-        expr = expr.encode('unicode_escape')
-        columns = [column for column in fieldnames if re.match(expr, column)]
-        if columns:
-            print("Expression: '%s' matched these columns:" % expr)
-            print('\n'.join(columns))
-            return columns
-        else:
-            raise NoMatch("No matching column found for '%s'" % expr)
-
-    # Get the first matching X column, and all matching Y columns
-    x_column = _matches(x_expr)[0]
-    y_columns = sum([_matches(y_expr) for y_expr in y_exprs], [])
-
-    return (x_column, y_columns)
+    prefix = ''
+    # Group all first letters, then all second letters, etc.
+    # letters list will be the same length as the shortest label
+    for letters in zip(*strings):
+        # If all letters are the same, append to common prefix
+        if len(set(letters)) == 1:
+            prefix += letters[0]
+    index = len(prefix)
+    stripped = [s[index:] for s in strings]
+    return (prefix, stripped)
 
 
-def add_date_labels(axes, min_date, max_date):
-    """Add date labels to the given Axes.
+def date_locator_formatter(min_date, max_date):
+    """Determine suitable locator and format to use for a range of dates.
+    Returns `(locator, formatter)` where `locator` is an `RRuleLocator`,
+    and `formatter` is a `DateFormatter`.
     """
-    axes.set_xlim(min_date, max_date)
     date_range = max_date - min_date
+    # Use HH:MM format by default
     date_format = '%H:%M'
 
-    # If date range is more than 2 days, label each day
+    # For more than 2 days, label each day
     if date_range > timedelta(days=2):
-        axes.xaxis.set_major_locator(dates.HourLocator(interval=24))
+        locator = dates.DayLocator(interval=1)
         date_format = '%b %d'
 
-    # If date range is more than 24 hours, label every 12 hours
+    # For more than 24 hours, label every 12 hours
     elif date_range > timedelta(hours=24):
-        axes.xaxis.set_major_locator(dates.HourLocator(interval=12))
+        locator = dates.HourLocator(interval=12)
 
-    # If date range is more than 2 hours, label every 30 minutes
+    # For more than 2 hours, label every hour
     elif date_range > timedelta(hours=2):
-        axes.xaxis.set_major_locator(dates.MinuteLocator(interval=30))
+        locator = dates.HourLocator(interval=1)
 
-    # If date range is more than 30 minutes, label 10-minute increments
+    # For more than 30 minutes, label 10-minute increments
     elif date_range > timedelta(minutes=30):
-        axes.xaxis.set_major_locator(dates.MinuteLocator(interval=10))
+        locator = dates.MinuteLocator(interval=10)
 
-    # If date range is more than 10 minutes, label every 5 minutes
+    # For more than 10 minutes, label every 5 minutes
     elif date_range > timedelta(minutes=10):
-        axes.xaxis.set_major_locator(dates.MinuteLocator(interval=5))
+        locator = dates.MinuteLocator(interval=5)
 
-    # If date range is 10 minutes or less, label every minute
+    # For 10 minutes or less, label every minute
     else:
-        axes.xaxis.set_major_locator(dates.MinuteLocator())
+        locator = dates.MinuteLocator()
 
-    # Use HH:MM format for all labels
-    axes.xaxis.set_major_formatter(dates.DateFormatter(date_format))
-
+    formatter = dates.DateFormatter(date_format)
+    return (locator, formatter)
 
 def read_csv_values(reader, x_column, y_columns, date_format=''):
     """Read values from a csv `DictReader`, and return all values in
@@ -148,8 +140,11 @@ def read_csv_values(reader, x_column, y_columns, date_format=''):
     y_values = {}
     for row in reader:
         x_value = row[x_column]
+
+        # If X is supposed to be a date, try to convert it
         if date_format:
             x_value = datetime.strptime(x_value, date_format)
+        # Otherwise, assume it's a floating-point numeric value
         else:
             x_value = float_or_0(x_value)
 
@@ -161,7 +156,115 @@ def read_csv_values(reader, x_column, y_columns, date_format=''):
                 y_values[y_col] = []
             y_values[y_col].append(float_or_0(row[y_col]))
 
-    return x_values, y_values
+    return (x_values, y_values)
+
+
+class Graph (object):
+    """A graph of data from a CSV file.
+    """
+    def __init__(self, csv_file, x_expr, y_exprs, title='', date_format='', line_style=''):
+        """Create a graph from `csvfile`, with `x_expr` defining the x-axis,
+        and `y_exprs` being columns to get y-values from.
+        """
+        self.csv_file = csv_file
+        self.x_expr = x_expr
+        self.y_exprs = y_exprs
+        self.title = title
+        self.date_format = date_format
+        self.line_style = line_style
+
+
+    def generate(self):
+        """Generate the graph.
+        """
+        print("Reading '%s'" % csvfile)
+        reader = csv.DictReader(open(self.csv_file, 'r'))
+
+        # Attempt to match column names
+        try:
+            x_column, y_columns = self.match_columns(reader.fieldnames)
+        except NoMatch as err:
+            runtime_error(err)
+
+        # Read each row in the .csv file and populate x and y value lists
+        x_values, y_values = read_csv_values(reader,
+            x_column, y_columns, self.date_format)
+
+        # Create the figure and plot
+        self.figure = pylab.figure()
+        self.axes = self.figure.add_subplot(111, xlabel=x_column)
+        self.axes.grid(True)
+
+        # Add graph title if provided
+        if self.title:
+            self.figure.suptitle(self.title, fontsize=18)
+
+        # Do date formatting if the X column is a date field
+        if self.date_format:
+            self.add_date_labels(min(x_values), max(x_values))
+            self.figure.autofmt_xdate()
+
+        # Plot lines for all Y columns
+        lines = []
+        for y_col in y_columns:
+            line = self.axes.plot(x_values, y_values[y_col], self.line_style)
+            lines.append(line)
+
+        # Draw a legend for the figure
+        # Strip common prefix from labels, and use as legend title
+        prefix, labels = strip_prefix(y_columns)
+        self.legend = self.figure.legend(lines, labels, 'lower center',
+            prop={'size': 9}, ncol=3, title=prefix)
+
+    def match_columns(self, fieldnames):
+        """Match `x_expr` and `y_exprs` to all available column
+        names in `fieldnames`. Return the matched `x_column` and
+        `y_columns`. If no matches are found for any expression,
+        raise a `NoMatch` exception.
+        """
+        def _matches(expr):
+            """Return a list of matching column names for `expr`,
+            or raise a `NoMatch` exception if there were none.
+            """
+            # Do backslash-escape of expressions
+            expr = expr.encode('unicode_escape')
+            columns = [column for column in fieldnames if re.match(expr, column)]
+            if columns:
+                print("Expression: '%s' matched these columns:" % expr)
+                print('\n'.join(columns))
+                return columns
+            else:
+                raise NoMatch("No matching column found for '%s'" % expr)
+
+        # Get the first matching X column, and all matching Y columns
+        x_column = _matches(self.x_expr)[0]
+        y_columns = sum([_matches(y_expr) for y_expr in self.y_exprs], [])
+
+        return (x_column, y_columns)
+
+    def add_date_labels(self, min_date, max_date):
+        """Add date labels to the graph.
+        """
+        self.axes.set_xlim(min_date, max_date)
+        locator, formatter = date_locator_formatter(min_date, max_date)
+        self.axes.xaxis.set_major_locator(locator)
+        self.axes.xaxis.set_major_formatter(formatter)
+
+    def save(self, filename):
+        """Save the graph to a .png, .svg, or .pdf file.
+        """
+        ext = filename[-3:]
+        if ext not in ('png',  'svg', 'pdf'):
+            print("File extension '%s' unknown. Assuming 'png'." % ext)
+            ext = 'png'
+        self.figure.savefig(filename, format=ext)
+        print("Saved '%s' in '%s' format." % (filename, ext))
+
+    def show(self):
+        """Display the graph in a GUI window.
+        """
+        pylab.show()
+
 
 
 def add_notes(figure, axes, notes_file):
@@ -178,85 +281,6 @@ def add_notes(figure, axes, notes_file):
         prop={'size': 9})
 
 
-def do_graph(csvfile, x_expr, y_exprs, title='', save_file='',
-    date_format='', line_style='-'):
-    """Generate a graph from `csvfile`, with `x_expr` defining the x-axis,
-    and `y_exprs` being columns to get y-values from.
-    """
-    print("Reading '%s'" % csvfile)
-    reader = csv.DictReader(open(csvfile, 'r'))
-
-    # Attempt to match column names
-    try:
-        x_column, y_columns = match_columns(x_expr, y_exprs, reader.fieldnames)
-    except NoMatch as err:
-        runtime_error(err)
-
-    # Confirm with the user
-    answer = raw_input("Graph these %d columns? " % len(y_columns))
-    if answer.lower() != 'y':
-        print("Quitting.")
-        sys.exit(0)
-
-    # Read each row in the .csv file and populate x and y value lists
-    x_values, y_values = read_csv_values(reader,
-        x_column, y_columns, date_format)
-
-    # Create the figure and plot
-    figure = pylab.figure()
-    axes = figure.add_subplot(111, xlabel=x_column)
-    axes.grid(True)
-
-    if title:
-        figure.suptitle(title, fontsize=18)
-
-    # Do date formatting if the X column was a date field
-    if date_format:
-        min_date, max_date = min(x_values), max(x_values)
-        add_date_labels(axes, min_date, max_date)
-        figure.autofmt_xdate()
-
-    # Plot lines for all Y columns
-    lines = []
-    for y_col in y_columns:
-        line = axes.plot(x_values, y_values[y_col], line_style)
-        lines.append(line)
-
-    # Add annotations if filename was provided (not implemented yet)
-    #if notes_file:
-    #    add_notes(figure, axes, notes_file)
-
-    # Draw a legend for the figure
-    short_labels = shorten_labels(y_columns)
-    legend = figure.legend(lines, short_labels, 'lower center',
-        prop={'size': 9}, ncol=3)
-
-    # If save_file was provided, write output to the given filename
-    if save_file:
-        ext = save_file[-3:]
-        if ext not in ('png',  'svg', 'pdf'):
-            print("File extension '%s' unknown. Assuming 'png'." % ext)
-            ext = 'png'
-        figure.savefig(save_file, format=ext)
-        print("Saved '%s' in '%s' format." % (save_file, ext))
-    # Otherwise, just show the graph viewer
-    else:
-        pylab.show()
-
-
-def shorten_labels(labels):
-    """Given a list of column labels of the form "\A\B\C", return
-    a new list of labels with any common A, B, C parts.
-    """
-    # Don't try to shorten fewer than 2 labels
-    if len(labels) < 2:
-        return labels
-    split_labels = (label.split('\\') for label in labels)
-    transposed = zip(*split_labels)
-    while len(set(transposed[0])) == 1:
-        transposed.pop(0)
-    return ['\\'.join(parts) for parts in zip(*transposed)]
-
 
 # Main program
 if __name__ == '__main__':
@@ -268,6 +292,7 @@ if __name__ == '__main__':
     title = ''
     save_file = ''
     date_format = '%m/%d/%Y %H:%M:%S.%f' # Perfmon format
+    line_style = '-'
 
     # Get -options
     while args[0].startswith('-'):
@@ -281,7 +306,7 @@ if __name__ == '__main__':
         elif opt == '-linestyle':
             line_style = args.pop(0)
         else:
-            usage_error("Unknown option: %s" % arg)
+            usage_error("Unknown option: %s" % opt)
 
     # Get positional arguments
     csvfile = args.pop(0)
@@ -289,6 +314,14 @@ if __name__ == '__main__':
     y_exprs = args
 
     # Generate the graph
-    do_graph(csvfile, x_expr, y_exprs, title, save_file, date_format, line_style)
+    #do_graph(csvfile, x_expr, y_exprs, title, save_file, date_format, line_style)
+    graph = Graph(csvfile, x_expr, y_exprs, title, date_format, line_style)
+    graph.generate()
+    if save_file:
+        graph.save(save_file)
+    else:
+        graph.show()
+
+
 
 
