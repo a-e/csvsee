@@ -6,7 +6,7 @@
 
 usage = """Usage:
 
-    csvgraph.py [-options] filename.csv "X column" "Y column 1" ["Y column 2"] ...
+    csvgraph.py filename.csv [-options] "X column" "Y column 1" ["Y column 2"] ...
 
 Where filename.csv contains comma-separated values, with column names in the
 first row, and all subsequent arguments are regular expressions that may match
@@ -33,6 +33,13 @@ Options:
             "o-" Circle + solid lines
         See the Matplotlib Axes.plot documentation for available styles:
         http://matplotlib.sourceforge.net/api/axes_api.html#matplotlib.axes.Axes.plot
+    -gmt [+/-]<hours>
+        Adjust timestamps if they are not in GMT. For example, if the
+        timestamps are GMT-6, use -gmt +6 to make the graph display them
+        as GMT times.
+    -xlabel "Label string"
+        Use the given string as the label of the X axis. If omitted, the
+        name of the X-column is used.
 
 At least one X-column and one Y-column must be provided; if any Y-column
 expression matches multiple column names, and/or if multiple Y-column
@@ -132,7 +139,7 @@ def date_locator_formatter(min_date, max_date):
     formatter = dates.DateFormatter(date_format)
     return (locator, formatter)
 
-def read_csv_values(reader, x_column, y_columns, date_format=''):
+def read_csv_values(reader, x_column, y_columns, date_format='', gmt_offset=0):
     """Read values from a csv `DictReader`, and return all values in
     `x_column` and `y_columns`.
     """
@@ -143,7 +150,7 @@ def read_csv_values(reader, x_column, y_columns, date_format=''):
 
         # If X is supposed to be a date, try to convert it
         if date_format:
-            x_value = datetime.strptime(x_value, date_format)
+            x_value = datetime.strptime(x_value, date_format) + timedelta(hours=gmt_offset)
         # Otherwise, assume it's a floating-point numeric value
         else:
             x_value = float_or_0(x_value)
@@ -162,7 +169,7 @@ def read_csv_values(reader, x_column, y_columns, date_format=''):
 class Graph (object):
     """A graph of data from a CSV file.
     """
-    def __init__(self, csv_file, x_expr, y_exprs, title='', date_format='', line_style=''):
+    def __init__(self, csv_file, x_expr='', y_exprs='', title='', date_format='', line_style=''):
         """Create a graph from `csvfile`, with `x_expr` defining the x-axis,
         and `y_exprs` being columns to get y-values from.
         """
@@ -172,12 +179,13 @@ class Graph (object):
         self.title = title
         self.date_format = date_format
         self.line_style = line_style
-
+        self.gmt_offset = 0
+        self.xlabel = ''
 
     def generate(self):
         """Generate the graph.
         """
-        print("Reading '%s'" % csvfile)
+        print("Reading '%s'" % self.csv_file)
         reader = csv.DictReader(open(self.csv_file, 'r'))
 
         # Attempt to match column names
@@ -188,12 +196,15 @@ class Graph (object):
 
         # Read each row in the .csv file and populate x and y value lists
         x_values, y_values = read_csv_values(reader,
-            x_column, y_columns, self.date_format)
+            x_column, y_columns, self.date_format, self.gmt_offset)
 
         # Create the figure and plot
         self.figure = pylab.figure()
-        self.axes = self.figure.add_subplot(111, xlabel=x_column)
+        self.axes = self.figure.add_subplot(111)
         self.axes.grid(True)
+
+        # Label X-axis with provided label, or column name
+        self.axes.set_xlabel(self.xlabel or x_column)
 
         # Add graph title if provided
         if self.title:
@@ -211,10 +222,11 @@ class Graph (object):
             lines.append(line)
 
         # Draw a legend for the figure
-        # Strip common prefix from labels, and use as legend title
+        # Strip common prefix from labels, and use as Y label
         prefix, labels = strip_prefix(y_columns)
+        self.axes.set_ylabel(prefix)
         self.legend = self.figure.legend(lines, labels, 'lower center',
-            prop={'size': 9}, ncol=3, title=prefix)
+            prop={'size': 9}, ncol=3)
 
     def match_columns(self, fieldnames):
         """Match `x_expr` and `y_exprs` to all available column
@@ -289,39 +301,48 @@ if __name__ == '__main__':
     else:
         args = sys.argv[1:]
 
-    title = ''
     save_file = ''
-    date_format = '%m/%d/%Y %H:%M:%S.%f' # Perfmon format
-    line_style = '-'
 
-    # Get -options
+    # CSV file is always the first argument
+    csv_file = args.pop(0)
+    if not csv_file.endswith('.csv'):
+        usage_error("First argument must be a filename with .csv extension.")
+
+    # Create Graph, using Perfmon date format by default
+    graph = Graph(csv_file, date_format='%m/%d/%Y %H:%M:%S.%f')
+
+    # Get any -options that follow
     while args[0].startswith('-'):
         opt = args.pop(0)
         if opt == '-title':
-            title = args.pop(0)
+            graph.title = args.pop(0)
+
         elif opt == '-save':
             save_file = args.pop(0)
+
         elif opt == '-dateformat':
-            date_format = args.pop(0)
+            graph.date_format = args.pop(0)
+
         elif opt == '-linestyle':
-            line_style = args.pop(0)
+            graph.line_style = args.pop(0)
+
+        elif opt == '-gmt':
+            graph.gmt_offset = int(args.pop(0))
+
+        elif opt == '-xlabel':
+            graph.xlabel = args.pop(0)
+
         else:
             usage_error("Unknown option: %s" % opt)
 
     # Get positional arguments
-    csvfile = args.pop(0)
-    x_expr = args.pop(0)
-    y_exprs = args
+    graph.x_expr = args.pop(0)
+    graph.y_exprs = args
 
     # Generate the graph
-    #do_graph(csvfile, x_expr, y_exprs, title, save_file, date_format, line_style)
-    graph = Graph(csvfile, x_expr, y_exprs, title, date_format, line_style)
     graph.generate()
     if save_file:
         graph.save(save_file)
     else:
         graph.show()
-
-
-
 
