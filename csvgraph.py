@@ -40,6 +40,9 @@ Options:
     -xlabel "Label string"
         Use the given string as the label of the X axis. If omitted, the
         name of the X-column is used.
+    -ymax <number>
+        Set the maximum Y-value beyond which the graph is cropped. By default,
+        maximum Y-value is determined by the maximum value present in the data.
 
 At least one X-column and one Y-column must be provided; if any Y-column
 expression matches multiple column names, and/or if multiple Y-column
@@ -97,9 +100,47 @@ def strip_prefix(strings):
         # If all letters are the same, append to common prefix
         if len(set(letters)) == 1:
             prefix += letters[0]
+        else:
+            break
     index = len(prefix)
     stripped = [s[index:] for s in strings]
     return (prefix, stripped)
+
+
+def guess_date_format(date_string):
+    """Try to guess what format a given date/time string is in.
+    If format could be inferred, return the format string. Otherwise, return None.
+
+    Examples:
+
+        >>> guess_date_format('2010/01/28 13:25:49')
+        '%Y/%m/%d %H:%M:%S'
+
+        >>> guess_date_format('01/28/10 1:25:49 PM')
+        '%m/%d/%y %I:%M:%S %p'
+
+        >>> guess_date_format('01/28/2010 13:25:49.123')
+        '%m/%d/%Y %H:%M:%S.%f'
+
+    Some date strings are ambiguous; for example, '01/28/10' could be interpreted
+    as January 28, 2010, or as October 28, 2001. In these cases, the format guessed
+    might be wrong.
+    """
+    # Date formats to try
+    _formats = (
+        '%Y/%m/%d %H:%M:%S',
+        '%m/%d/%y %I:%M:%S %p',
+        '%m/%d/%Y %H:%M:%S.%f',
+    )
+    for format in _formats:
+        try:
+            _result = datetime.strptime(date_string, format)
+        except ValueError:
+            pass
+        else:
+            return format
+    return None
+
 
 
 def date_locator_formatter(min_date, max_date):
@@ -116,9 +157,9 @@ def date_locator_formatter(min_date, max_date):
         locator = dates.DayLocator(interval=1)
         date_format = '%b %d'
 
-    # For more than 24 hours, label every 12 hours
+    # For more than 24 hours, label every 6 hours
     elif date_range > timedelta(hours=24):
-        locator = dates.HourLocator(interval=12)
+        locator = dates.HourLocator(interval=6)
 
     # For more than 2 hours, label every hour
     elif date_range > timedelta(hours=2):
@@ -138,6 +179,7 @@ def date_locator_formatter(min_date, max_date):
 
     formatter = dates.DateFormatter(date_format)
     return (locator, formatter)
+
 
 def read_csv_values(reader, x_column, y_columns, date_format='', gmt_offset=0):
     """Read values from a csv `DictReader`, and return all values in
@@ -181,6 +223,8 @@ class Graph (object):
         self.line_style = line_style
         self.gmt_offset = 0
         self.xlabel = ''
+        self.ymax = 0
+
 
     def generate(self):
         """Generate the graph.
@@ -221,12 +265,18 @@ class Graph (object):
             line = self.axes.plot(x_values, y_values[y_col], self.line_style)
             lines.append(line)
 
+        # Set Y-limit if provided
+        if self.ymax > 0:
+            print("Setting ymax to %s" % self.ymax)
+            self.axes.set_ylim(0, self.ymax)
+
         # Draw a legend for the figure
         # Strip common prefix from labels, and use as Y label
         prefix, labels = strip_prefix(y_columns)
         self.axes.set_ylabel(prefix)
         self.legend = self.figure.legend(lines, labels, 'lower center',
             prop={'size': 9}, ncol=3)
+
 
     def match_columns(self, fieldnames):
         """Match `x_expr` and `y_exprs` to all available column
@@ -254,6 +304,7 @@ class Graph (object):
 
         return (x_column, y_columns)
 
+
     def add_date_labels(self, min_date, max_date):
         """Add date labels to the graph.
         """
@@ -278,26 +329,24 @@ class Graph (object):
         pylab.show()
 
 
-
-def add_notes(figure, axes, notes_file):
-    # Draw a vertical line
-    annot_lines = [
-        axes.axvline(x_values[4]),
-        axes.axvline(x_values[8]),
-    ]
-    annot_labels = [
-        'Hello world',
-        'Goodbye cruel world',
-    ]
-    annot_legend = figure.legend(annot_lines, annot_labels,
-        prop={'size': 9})
-
+def print_columns(csv_file):
+    """Display column names in the given .csv file.
+    """
+    infile = open(csv_file, 'r')
+    first = infile.readline()
+    infile.close()
+    columns = [col.strip(' "') for col in first.strip().split(',')]
+    print("Column names found in '%s'" % csv_file)
+    print('\n'.join(columns))
 
 
 # Main program
 if __name__ == '__main__':
-    if len(sys.argv) < 4:
-        usage_error("Need a filename and at least two column names")
+    if len(sys.argv) == 2 and sys.argv[1].lower().endswith('.csv'):
+        print_columns(sys.argv[1])
+        sys.exit()
+    elif len(sys.argv) < 4:
+        usage_error("Need a .csv filename and at least two column names")
     else:
         args = sys.argv[1:]
 
@@ -305,7 +354,7 @@ if __name__ == '__main__':
 
     # CSV file is always the first argument
     csv_file = args.pop(0)
-    if not csv_file.endswith('.csv'):
+    if not csv_file.lower().endswith('.csv'):
         usage_error("First argument must be a filename with .csv extension.")
 
     # Create Graph, using Perfmon date format by default
@@ -331,6 +380,9 @@ if __name__ == '__main__':
 
         elif opt == '-xlabel':
             graph.xlabel = args.pop(0)
+
+        elif opt == '-ymax':
+            graph.ymax = float(args.pop(0))
 
         else:
             usage_error("Unknown option: %s" % opt)
