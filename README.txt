@@ -1,18 +1,42 @@
+===============================================================================
+csvtools
+===============================================================================
+
+This project contains several Python scripts for working with comma-separated
+(CSV) data files. They were originally developed to help with analyzing test
+results coming from Grinder and Performance Monitor.
+
+All of the scripts require Python:
+
+  http://python.org/download/
+
+The `csvgraph.py` script has two additional dependencies:
+
+  matplotlib:
+    http://sourceforge.net/projects/matplotlib/files/matplotlib/matplotlib-0.99.1/
+  NumPy:
+    http://sourceforge.net/projects/numpy/files/
+
+If you'd like to stay up to date with the latest version of this project
+folder, install Bazaar:
+
+    http://bazaar.canonical.com/
+
+And check out a copy to your local disk:
+
+    cd \some\local\path
+    bzr checkout sftp://admin@ftp.automation-excellence.com/srv/bzr/csvtools
+
+Then use `bzr update` to stay current with the latest version.
+
+
+-------
 csvgraph
 --------
 
 The ``csvgraph.py`` script in this folder is designed to generate graphs of
 comma-separated (.csv) data files, particularly those created by the
 Windows Performance Monitor tool.
-
-Dependencies:
-
-  Python:
-    http://python.org/download/
-  matplotlib:
-    http://sourceforge.net/projects/matplotlib/files/matplotlib/matplotlib-0.99.1/
-  NumPy:
-    http://sourceforge.net/projects/numpy/files/
 
 You may want to copy the ``csvgraph.py`` script somewhere on your system path
 for easier execution. Run the script without arguments to see usage notes.
