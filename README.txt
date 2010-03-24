@@ -25,12 +25,22 @@ folder, install Bazaar:
 And check out a copy to your local disk:
 
     cd \some\local\path
-    bzr checkout sftp://admin@ftp.automation-excellence.com/srv/bzr/csvtools
+    bzr checkout lp:csvsee
 
 Then use `bzr update` to stay current with the latest version.
 
 
--------
+--------
+License
+--------
+
+This software is open source, under the terms of the simplified BSD
+license:
+
+    http://www.opensource.org/licenses/bsd-license.php
+
+
+--------
 csvgraph
 --------
 
