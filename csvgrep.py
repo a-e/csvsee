@@ -17,7 +17,7 @@ def date_chop(line):
     """Return the date/time portion of a given line, truncated to minutes.
     """
     date_part = ' '.join(line.split()[0:3])
-    timestamp = datetime.strptime(date_part, '%m/%d/%y %I:%M:%S %p') 
+    timestamp = datetime.strptime(date_part, '%m/%d/%y %I:%M:%S %p')
     return timestamp.strftime('%Y/%m/%d %H:%M')
 
 

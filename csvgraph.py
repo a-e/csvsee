@@ -61,7 +61,9 @@ import pylab
 from matplotlib import dates
 
 
-class NoMatch (Exception): pass
+class NoMatch (Exception):
+    """Exception raised when no column name matches a given expression."""
+    pass
 
 def usage_error(message):
     """Print a usage error, along with a custom message, then exit.
@@ -142,7 +144,6 @@ def guess_date_format(date_string):
     return None
 
 
-
 def date_locator_formatter(min_date, max_date):
     """Determine suitable locator and format to use for a range of dates.
     Returns `(locator, formatter)` where `locator` is an `RRuleLocator`,
@@ -192,7 +193,8 @@ def read_csv_values(reader, x_column, y_columns, date_format='', gmt_offset=0):
 
         # If X is supposed to be a date, try to convert it
         if date_format:
-            x_value = datetime.strptime(x_value, date_format) + timedelta(hours=gmt_offset)
+            x_value = datetime.strptime(x_value, date_format) + \
+                timedelta(hours=gmt_offset)
         # Otherwise, assume it's a floating-point numeric value
         else:
             x_value = float_or_0(x_value)
@@ -211,7 +213,8 @@ def read_csv_values(reader, x_column, y_columns, date_format='', gmt_offset=0):
 class Graph (object):
     """A graph of data from a CSV file.
     """
-    def __init__(self, csv_file, x_expr='', y_exprs='', title='', date_format='', line_style=''):
+    def __init__(self, csv_file, x_expr='', y_exprs='', title='',
+                 date_format='', line_style=''):
         """Create a graph from `csvfile`, with `x_expr` defining the x-axis,
         and `y_exprs` being columns to get y-values from.
         """
@@ -224,6 +227,10 @@ class Graph (object):
         self.gmt_offset = 0
         self.xlabel = ''
         self.ymax = 0
+        # These will be set by generate()
+        self.figure = None
+        self.axes = None
+        self.legend = None
 
 
     def generate(self):
@@ -290,7 +297,8 @@ class Graph (object):
             """
             # Do backslash-escape of expressions
             expr = expr.encode('unicode_escape')
-            columns = [column for column in fieldnames if re.match(expr, column)]
+            columns = [column for column in fieldnames
+                       if re.match(expr, column)]
             if columns:
                 print("Expression: '%s' matched these columns:" % expr)
                 print('\n'.join(columns))
