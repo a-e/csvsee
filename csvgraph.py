@@ -340,10 +340,8 @@ class Graph (object):
 def print_columns(csv_file):
     """Display column names in the given .csv file.
     """
-    infile = open(csv_file, 'r')
-    first = infile.readline()
-    infile.close()
-    columns = [col.strip(' "') for col in first.strip().split(',')]
+    reader = csv.DictReader(open(csv_file, 'r'))
+    columns = reader.fieldnames
     print("Column names found in '%s'" % csv_file)
     print('\n'.join(columns))
 
