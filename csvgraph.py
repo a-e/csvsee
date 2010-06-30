@@ -57,8 +57,6 @@ import csv
 import sys
 import re
 from datetime import datetime, timedelta
-import pylab
-from matplotlib import dates
 
 
 class NoMatch (Exception):
@@ -149,6 +147,8 @@ def date_locator_formatter(min_date, max_date):
     Returns `(locator, formatter)` where `locator` is an `RRuleLocator`,
     and `formatter` is a `DateFormatter`.
     """
+    from matplotlib import dates
+
     date_range = max_date - min_date
     # Use HH:MM format by default
     date_format = '%H:%M'
@@ -236,6 +236,8 @@ class Graph (object):
     def generate(self):
         """Generate the graph.
         """
+        import pylab
+
         print("Reading '%s'" % self.csv_file)
         reader = csv.DictReader(open(self.csv_file, 'r'))
 
