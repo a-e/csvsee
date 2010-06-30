@@ -15,7 +15,7 @@ class NoTestNames (Exception):
     pass
 
 class TestStats:
-    """Statistics on all tests, as gathered from a Grinder data_* file.
+    """Statistics on all tests, as gathered from Grinder ``data_*`` files.
     """
     _stats = (
         'Test time',
@@ -37,6 +37,7 @@ class TestStats:
         self.test_counts = {}
         # Accumulated statistics for each test
         self.test_totals = {}
+        # Initialize empty/0 for all counts and totals
         for test_num in self.tests:
             self.test_counts[test_num] = 0
             self.test_totals[test_num] = dict((stat, 0) for stat in self._stats)
@@ -47,7 +48,7 @@ class TestStats:
 
 
     def get_test_names(self):
-        """Get a list of (number, name) for each test from the summary
+        """Return a dict of ``{number: name}`` for each test from the summary
         portion of the current outfile.
         """
         tests = []
@@ -59,8 +60,7 @@ class TestStats:
 
 
     def populate_stats(self):
-        """Return a list of TestStats, with accumulated statistics for all
-        tests in the given Grinder output and data files.
+        """Add statistics for all tests in all Grinder data files.
         """
         for datafile in self.datafiles:
             print("Getting test stats from %s" % datafile)
@@ -137,8 +137,8 @@ class TestStats:
 
 
 def grinder_files(include_dirs):
-    """Return a list of full pathnames to all out_* and data_* files
-    found in descendants of include_dirs.
+    """Return a list of full pathnames to all ``out_*`` and ``data_*`` files
+    found in descendants of ``include_dirs``.
     """
     out_data_files = []
     for dirname in include_dirs:
@@ -153,8 +153,8 @@ def grinder_files(include_dirs):
 
 
 def full_csv_summary(include_dirs, csv_file):
-    """Generate a full CSV summary of all grinder out_* and data_* files
-    in descendants of the current directory.
+    """Generate a full CSV summary of all grinder ``out_*`` and ``data_*``
+    files in descendants of the current directory.
     """
     stats = []
     for (out, data) in grinder_files(include_dirs):
