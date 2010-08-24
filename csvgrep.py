@@ -1,25 +1,18 @@
 #! /usr/bin/env python
 # csvgrep.py
 
-"""Given one or more line-timestamped text files (such as log files), count the number of
-matching phrases that occur each minute.
-"""
+__doc__ = """Given one or more line-timestamped text files (such as log files),
+count the number of matching phrases that occur each minute.
 
-usage = """Usage:
+Usage::
 
     csvgrep.py -infiles <file1> <file2> -match <expr1> <expr2> -out <report.csv>
 """
+usage = __doc__
 
 import sys
 from datetime import datetime
-
-def date_chop(line):
-    """Return the date/time portion of a given line, truncated to minutes.
-    """
-    date_part = ' '.join(line.split()[0:3])
-    timestamp = datetime.strptime(date_part, '%m/%d/%y %I:%M:%S %p')
-    return timestamp.strftime('%Y/%m/%d %H:%M')
-
+from csvsee import utils
 
 def grep_files(infiles, matches):
     # Counts of each match, used as a template for each row
@@ -28,7 +21,7 @@ def grep_files(infiles, matches):
     # Read each line of each infile
     for infile in infiles:
         for line in open(infile, 'r'):
-            timestamp = date_chop(line)
+            timestamp = utils.date_chop(line)
 
             # If this datestamp hasn't appeared before, add it
             if timestamp not in rows:
