@@ -37,10 +37,3 @@ option. See the datetime_ documentation for valid formatting operators. Use
 
 .. _datetime: http://docs.python.org/library/datetime.html
 
-
-Module documentation
-====================
-
-.. automodule:: csvgraph
-    :members:
-
