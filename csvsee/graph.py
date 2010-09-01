@@ -133,7 +133,7 @@ def top_by_peak(n, y_columns, y_values):
 class Graph (object):
     """A graph of data from a CSV file.
     """
-    def __init__(self, csv_file, x_expr='', y_exprs='', title='',
+    def __init__(self, csv_file, x_expr='', y_exprs=['.*'], title='',
                  date_format='', line_style=''):
         """Create a graph from `csvfile`, with `x_expr` defining the x-axis,
         and `y_exprs` being columns to get y-values from.
@@ -240,13 +240,15 @@ class Graph (object):
         `y_columns`. If no matches are found for any expression,
         raise a `NoMatch` exception.
         """
-        def _matches(expr):
+        # Make a copy of fieldnames
+        fieldnames = [field for field in fieldnames]
+        def _matches(expr, fields):
             """Return a list of matching column names for `expr`,
             or raise a `NoMatch` exception if there were none.
             """
             # Do backslash-escape of expressions
             expr = expr.encode('unicode_escape')
-            columns = [column for column in fieldnames
+            columns = [column for column in fields
                        if re.match(expr, column)]
             if columns:
                 print("Expression: '%s' matched these columns:" % expr)
@@ -255,9 +257,21 @@ class Graph (object):
             else:
                 raise NoMatch("No matching column found for '%s'" % expr)
 
-        # Get the first matching X column, and all matching Y columns
-        x_column = _matches(self.x_expr)[0]
-        y_columns = sum([_matches(y_expr) for y_expr in self.y_exprs], [])
+        # If x_expr is provided, match on that.
+        if self.x_expr:
+            x_column = _matches(self.x_expr, fieldnames)[0]
+        # Otherwise, just take the first field.
+        else:
+            x_column = fieldnames[0]
+
+        # In any case, remove the x column from fieldnames so it
+        # won't be matched by any y-expression.
+        fieldnames.remove(x_column)
+
+        # Get all matching Y columns
+        y_columns = sum([_matches(y_expr, fieldnames)
+                         for y_expr in self.y_exprs],
+                        [])
 
         return (x_column, y_columns)
 

@@ -5,7 +5,7 @@ __doc__ = """Generage graphs from .csv data files.
 
 Usage::
 
-    csvgraph.py filename.csv [-options] "X column" "Y column 1" ["Y column 2"] ...
+    csvgraph.py filename.csv [-options] "Column 1" ["Column 2"] ...
 
 Where filename.csv contains comma-separated values, with column names in the
 first row, and all subsequent arguments are regular expressions that may match
@@ -13,19 +13,25 @@ one or more column names.
 
 Options:
 
-    -title "Title"
-        Set the title label for the graph. Default: No title.
-
-    -save "filename.(png|svg|pdf)"
-        Save the graph to a file. Default: Show the graph in a viewer.
+    -datetime "<column name>"
+        The name of the column containing your timestamp. If this is
+        omitted, the first column of the .csv file is assumed to be
+        the timestamp. The timestamp column determines the X-axis, and
+        will not be graphed (even if it matches a column expression).
 
     -dateformat "<format string>"
-        Interpret the X-column as a date in the given format. Examples:
+        Interpret the timestamp as a date in the given format. Examples:
             %m/%d/%y %I:%M:%S %p: 12/10/09 3:45:56 PM (Grinder logs)
             %m/%d/%Y %H:%M:%S.%f: 12/10/2009 15:45:56.789 (Perfmon)
         See http://docs.python.org/library/datetime.html for valid formats.
         The Perfmon date format is the default. If the X-column
         is NOT a date, use -dateformat ""
+
+    -title "Title"
+        Set the title label for the graph. Default: No title.
+
+    -save "filename.(png|svg|pdf)"
+        Save the graph to a file. Default: Show the graph in a viewer.
 
     -linestyle "<format string>"
         Define the style of lines plotted on the graph. Examples are:
@@ -113,16 +119,19 @@ if __name__ == '__main__':
     graph = Graph(csv_file, date_format='%m/%d/%Y %H:%M:%S.%f')
 
     # Get any -options that follow
-    while args[0].startswith('-'):
+    while args and args[0].startswith('-'):
         opt = args.pop(0)
-        if opt == '-title':
+        if opt == '-datetime':
+            graph.x_expr = args.pop(0)
+
+        elif opt == '-dateformat':
+            graph.date_format = args.pop(0)
+
+        elif opt == '-title':
             graph.title = args.pop(0)
 
         elif opt == '-save':
             save_file = args.pop(0)
-
-        elif opt == '-dateformat':
-            graph.date_format = args.pop(0)
 
         elif opt == '-linestyle':
             graph.line_style = args.pop(0)
@@ -151,9 +160,9 @@ if __name__ == '__main__':
         else:
             usage_error("Unknown option: %s" % opt)
 
-    # Get positional arguments
-    graph.x_expr = args.pop(0)
-    graph.y_exprs = args
+    # Get column expressions (all remaining arguments, if any)
+    if args:
+        graph.y_exprs = args
 
     # Generate the graph
     graph.generate()
