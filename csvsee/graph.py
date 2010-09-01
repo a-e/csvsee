@@ -103,6 +103,33 @@ def read_csv_values(reader, x_column, y_columns, date_format='', gmt_offset=0):
     return (x_values, y_values)
 
 
+def top_by_average(n, y_columns, y_values):
+    """Determine the top ``n`` columns based on the average of values
+    in ``y_values``, and return the filtered ``y_columns`` names.
+    """
+    averages = []
+    for column in y_columns:
+        values = y_values[column]
+        avg = sum(values) / len(values)
+        averages.append((avg, column))
+    # Keep the top n averages
+    sorted_columns = [col for (avg, col) in reversed(sorted(averages))]
+    return sorted_columns[0:n]
+
+
+def top_by_peak(n, y_columns, y_values):
+    """Determine the top ``n`` columns based on the peak value
+    in ``y_values``, and return the filtered ``y_columns`` names.
+    """
+    peaks = []
+    for column in y_columns:
+        peak = max(y_values[column])
+        peaks.append((peak, column))
+    # Keep the top n peaks
+    sorted_columns = [col for (peak, col) in reversed(sorted(peaks))]
+    return sorted_columns[0:n]
+
+
 class Graph (object):
     """A graph of data from a CSV file.
     """
@@ -114,7 +141,7 @@ class Graph (object):
         self.csv_file = csv_file
         self.x_expr = x_expr
         self.y_exprs = y_exprs
-        self.title = title
+        self.title = title or csv_file
         self.date_format = date_format
         self.line_style = line_style
         self.gmt_offset = 0
@@ -122,8 +149,11 @@ class Graph (object):
         self.ylabel = ''
         self.ymax = 0
         self.truncate = 0
+        self.top = 0
+        self.peak = 0
         # These will be set by generate()
         self.figure = None
+        self.figtitle = None
         self.axes = None
         self.legend = None
 
@@ -156,12 +186,23 @@ class Graph (object):
 
         # Add graph title if provided
         if self.title:
-            self.figure.suptitle(self.title, fontsize=18)
+            self.figtitle = self.figure.suptitle(self.title, fontsize=18)
 
         # Do date formatting if the X column is a date field
         if self.date_format:
             self.add_date_labels(min(x_values), max(x_values))
             self.figure.autofmt_xdate()
+
+        # Get the top n by average?
+        if self.top:
+            y_columns = top_by_average(self.top, y_columns, y_values)
+            print("********** Top %d columns by average:" % self.top)
+            print('\n'.join(y_columns))
+        # Get the top n by peak?
+        elif self.peak:
+            y_columns = top_by_peak(self.peak, y_columns, y_values)
+            print("********** Top %d columns by peak:" % self.peak)
+            print('\n'.join(y_columns))
 
         # Plot lines for all Y columns
         lines = []
@@ -188,7 +229,8 @@ class Graph (object):
         if self.truncate > 0:
             labels = [label[0:self.truncate] for label in labels]
 
-        self.legend = self.figure.legend(lines, labels, 'lower center',
+        self.legend = pylab.legend(lines, labels,
+            loc='upper center', bbox_to_anchor=(0.5, -0.15),
             prop={'size': 9}, ncol=3)
 
 
@@ -235,7 +277,16 @@ class Graph (object):
         if ext not in ('png',  'svg', 'pdf'):
             print("File extension '%s' unknown. Assuming 'png'." % ext)
             ext = 'png'
-        self.figure.savefig(filename, format=ext)
+        # Ensure that title and legend don't get cropped out
+        extra = [
+            self.legend.legendPatch,
+            self.figtitle,
+        ]
+        self.figure.savefig(
+            filename,
+            format=ext,
+            bbox_inches='tight',
+            bbox_extra_artists=extra)
         print("Saved '%s' in '%s' format." % (filename, ext))
 
     def show(self):

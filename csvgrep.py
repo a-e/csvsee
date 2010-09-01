@@ -10,6 +10,11 @@ Usage::
 """
 usage = __doc__
 
+"""TODO
+
+- Get more flexible date formatting working, or allow custom format strings
+"""
+
 import sys
 from datetime import datetime
 from csvsee import utils
@@ -20,8 +25,18 @@ def grep_files(infiles, matches):
     rows = {}
     # Read each line of each infile
     for infile in infiles:
+        # HACK: Fake timestamp in case no real timestamps are ever found
+        timestamp = "00:00"
         for line in open(infile, 'r'):
-            timestamp = utils.date_chop(line)
+            # See if this line has a timestamp
+            try:
+                line_timestamp = utils.date_chop(line)
+            # No timestamp found, stick with the current one
+            except ValueError:
+                pass
+            # New timestamp found, switch to it
+            else:
+                timestamp = line_timestamp
 
             # If this datestamp hasn't appeared before, add it
             if timestamp not in rows:

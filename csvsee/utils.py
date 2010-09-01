@@ -104,12 +104,12 @@ def print_columns(csv_file):
     print('\n'.join(columns))
 
 
-def date_chop(line):
+def date_chop(line, date_format='%m/%d/%y %I:%M:%S %p'):
     """Return the date/time portion of a given line, truncated to minutes.
     """
     # FIXME: Make this more generic, possibly using guess_date_format
     date_part = ' '.join(line.split()[0:3])
-    timestamp = datetime.strptime(date_part, '%m/%d/%y %I:%M:%S %p')
+    timestamp = datetime.strptime(date_part, date_format)
     return timestamp.strftime('%Y/%m/%d %H:%M')
 
 

@@ -57,6 +57,14 @@ Options:
         Truncate the column labels to <number> characters. By default,
         no truncation is done.
 
+    -top <number>
+        Graph only the top <number> columns, based on the average of
+        all values in matching columns.
+
+    -peak <number>
+        Graph only the top <number> columns, based on the highest peak
+        value in matching columns.
+
 At least one X-column and one Y-column must be provided; if any Y-column
 expression matches multiple column names, and/or if multiple Y-column
 expressions are provided, then all matching columns will be included in the
@@ -66,6 +74,9 @@ If the X-column is a date field, then the X axis will be displayed in HH:MM
 format. Otherwise, all columns must be numeric (integer or floating-point).
 """
 usage = __doc__
+
+"""TODO
+"""
 
 import sys
 
@@ -130,6 +141,12 @@ if __name__ == '__main__':
 
         elif opt == '-truncate':
             graph.truncate = int(args.pop(0))
+
+        elif opt == '-top':
+            graph.top = int(args.pop(0))
+
+        elif opt == '-peak':
+            graph.peak = int(args.pop(0))
 
         else:
             usage_error("Unknown option: %s" % opt)
