@@ -25,6 +25,7 @@ def grep_files(infiles, matches):
     rows = {}
     # Read each line of each infile
     for infile in infiles:
+        print("Reading '%s' ..." % infile)
         # HACK: Fake timestamp in case no real timestamps are ever found
         timestamp = "00:00"
         for line in open(infile, 'r'):
