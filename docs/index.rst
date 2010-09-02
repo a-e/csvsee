@@ -29,6 +29,7 @@ Features
 * Display graphs in an interactive viewer with zooming/panning capability
 * Export graphs to a ``.png``, ``.svg`` or ``.pdf`` file
 * Customizable line styles, title / axis labels, and timestamp formats
+* Plot the top ``N`` data sets, by average or peak value within each column
 
 
 License
