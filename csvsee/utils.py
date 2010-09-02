@@ -32,7 +32,7 @@ def float_or_0(value):
 
 def guess_date_format(date_string):
     """Try to guess what format a given date/time string is in. If format can
-    be inferred, return the format string. Otherwise, return ``None``.
+    be inferred, return the format string. Otherwise, return an empty string.
 
     Examples::
 
@@ -51,6 +51,7 @@ def guess_date_format(date_string):
     """
     # Date formats to try
     _formats = (
+        '%Y/%m/%d %H:%M',
         '%Y/%m/%d %H:%M:%S',
         '%m/%d/%y %I:%M:%S %p',
         '%m/%d/%Y %H:%M:%S.%f',
@@ -63,7 +64,7 @@ def guess_date_format(date_string):
             pass
         else:
             return format
-    return None
+    return ''
 
 
 def strip_prefix(strings):

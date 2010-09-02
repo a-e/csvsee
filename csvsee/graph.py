@@ -81,6 +81,7 @@ def read_csv_values(reader, x_column, y_columns, date_format='', gmt_offset=0):
     """
     x_values = []
     y_values = {}
+
     for row in reader:
         x_value = row[x_column]
 
@@ -134,7 +135,7 @@ class Graph (object):
     """A graph of data from a CSV file.
     """
     def __init__(self, csv_file, x_expr='', y_exprs=['.*'], title='',
-                 date_format='', line_style=''):
+                 date_format='guess', line_style=''):
         """Create a graph from `csvfile`, with `x_expr` defining the x-axis,
         and `y_exprs` being columns to get y-values from.
         """
@@ -158,6 +159,18 @@ class Graph (object):
         self.legend = None
 
 
+    def guess_date_format(self, date_column):
+        """Try to guess the date format used in the current .csv file, by
+        reading ``date_column`` from the first row.
+        """
+        infile = open(self.csv_file, 'r')
+        reader = csv.DictReader(infile)
+        row = reader.next()
+        infile.close()
+        # Return the guessed format
+        return utils.guess_date_format(row[date_column])
+
+
     def generate(self):
         """Generate the graph.
         """
@@ -171,6 +184,10 @@ class Graph (object):
             x_column, y_columns = self.match_columns(reader.fieldnames)
         except NoMatch as err:
             runtime_error(err)
+
+        # Do we need to guess what format the date is in?
+        if self.date_format == 'guess':
+            self.date_format = self.guess_date_format(x_column)
 
         # Read each row in the .csv file and populate x and y value lists
         x_values, y_values = read_csv_values(reader,
@@ -188,7 +205,7 @@ class Graph (object):
         if self.title:
             self.figtitle = self.figure.suptitle(self.title, fontsize=18)
 
-        # Do date formatting if the X column is a date field
+        # Do date formatting of axis labels if the X column is a date field
         if self.date_format:
             self.add_date_labels(min(x_values), max(x_values))
             self.figure.autofmt_xdate()

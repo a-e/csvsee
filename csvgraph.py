@@ -5,7 +5,7 @@ __doc__ = """Generage graphs from .csv data files.
 
 Usage::
 
-    csvgraph.py filename.csv [-options] "Column 1" ["Column 2"] ...
+    csvgraph.py filename.csv [-options] ["Column 1"] ["Column 2"] ...
 
 Where filename.csv contains comma-separated values, with column names in the
 first row, and all subsequent arguments are regular expressions that may match
@@ -71,12 +71,29 @@ Options:
         Graph only the top <number> columns, based on the highest peak
         value in matching columns.
 
-At least one X-column and one Y-column must be provided; if any Y-column
-expression matches multiple column names, and/or if multiple Y-column
-expressions are provided, then all matching columns will be included in the
-graph.
+If no column names are given, then all columns are graphed. To graph only
+specific columns, provide one or more column expressions after the .csv
+filename and any options. Column names are given as regular expressions,
+allowing you to match multiple columns.
 
-If the X-column is a date field, then the X axis will be displayed in HH:MM
+Examples:
+
+    csvgraph.py data.csv
+        Graph all columns found in data.csv, using the first column
+        as the X-axis.
+
+    csvgraph.py data.csv -top 5
+        Graph the 5 columns with the highest average value
+
+    csvgraph.py data.csv "^Response.*"
+        Graph all columns beginning with the word "Response"
+
+    csvgraph.py data.csv A B C
+        Graph columns "A", "B", and "C". Note that these are regular
+        expressions, and will actually match all columns containing "A", all
+        columns containing "B", and all columns containing "C".
+
+If the first column is a date field, then the X axis will be displayed in HH:MM
 format. Otherwise, all columns must be numeric (integer or floating-point).
 """
 usage = __doc__
@@ -86,7 +103,6 @@ usage = __doc__
 
 import sys
 
-from csvsee.utils import print_columns
 from csvsee.graph import Graph
 
 
@@ -100,23 +116,20 @@ def usage_error(message):
 
 # Main program
 if __name__ == '__main__':
-    if len(sys.argv) == 2 and sys.argv[1].lower().endswith('.csv'):
-        print_columns(sys.argv[1])
-        sys.exit()
-    elif len(sys.argv) < 4:
-        usage_error("Need a .csv filename and at least two column names")
+    if len(sys.argv) < 2:
+        usage_error("Please provide the name of a .csv file.")
     else:
         args = sys.argv[1:]
-
-    save_file = ''
 
     # CSV file is always the first argument
     csv_file = args.pop(0)
     if not csv_file.lower().endswith('.csv'):
         usage_error("First argument must be a filename with .csv extension.")
 
-    # Create Graph, using Perfmon date format by default
-    graph = Graph(csv_file, date_format='%m/%d/%Y %H:%M:%S.%f')
+    # Create Graph for this csv file
+    graph = Graph(csv_file)
+
+    save_file = ''
 
     # Get any -options that follow
     while args and args[0].startswith('-'):
