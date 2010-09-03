@@ -102,9 +102,6 @@ format. Otherwise, all columns must be numeric (integer or floating-point).
 """
 usage = __doc__
 
-"""TODO
-"""
-
 import sys
 
 from csvsee.graph import Graph

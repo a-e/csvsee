@@ -25,11 +25,12 @@ Features
 --------
 * Generate graphs of just about any numerical data, particularly those having timestamps
 * Match one or more CSV column names with regular expressions
+* Plot the top ``N`` data sets, by average or peak value within each column
 * Automatic color-coding when graphing multiple columns
 * Display graphs in an interactive viewer with zooming/panning capability
 * Export graphs to a ``.png``, ``.svg`` or ``.pdf`` file
 * Customizable line styles, title / axis labels, and timestamp formats
-* Plot the top ``N`` data sets, by average or peak value within each column
+* Automatic guessing of date/time format
 
 
 License
