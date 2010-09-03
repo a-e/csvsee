@@ -111,8 +111,8 @@ def read_csv_values(reader, x_column, y_columns, date_format='',
     return (x_values, y_values)
 
 
-def top_by_average(n, y_columns, y_values):
-    """Determine the top ``n`` columns based on the average of values
+def top_by_average(count, y_columns, y_values, drop=0):
+    """Determine the top ``count`` columns based on the average of values
     in ``y_values``, and return the filtered ``y_columns`` names.
     """
     averages = []
@@ -122,11 +122,11 @@ def top_by_average(n, y_columns, y_values):
         averages.append((avg, column))
     # Keep the top n averages
     sorted_columns = [col for (avg, col) in reversed(sorted(averages))]
-    return sorted_columns[0:n]
+    return sorted_columns[drop:drop+count]
 
 
-def top_by_peak(n, y_columns, y_values):
-    """Determine the top ``n`` columns based on the peak value
+def top_by_peak(count, y_columns, y_values, drop=0):
+    """Determine the top ``count`` columns based on the peak value
     in ``y_values``, and return the filtered ``y_columns`` names.
     """
     peaks = []
@@ -135,38 +135,116 @@ def top_by_peak(n, y_columns, y_values):
         peaks.append((peak, column))
     # Keep the top n peaks
     sorted_columns = [col for (peak, col) in reversed(sorted(peaks))]
-    return sorted_columns[0:n]
+    return sorted_columns[drop:drop+count]
+
+
+def match_columns(fieldnames, x_expr, y_exprs):
+    """Match `x_expr` and `y_exprs` to all available column names in
+    `fieldnames`. Return the matched `x_column` and `y_columns`. If no matches
+    are found for any expression, raise a `NoMatch` exception.
+    """
+    # Make a copy of fieldnames
+    fieldnames = [field for field in fieldnames]
+    def _matches(expr, fields):
+        """Return a list of matching column names for `expr`,
+        or raise a `NoMatch` exception if there were none.
+        """
+        # Do backslash-escape of expressions
+        expr = expr.encode('unicode_escape')
+        columns = [column for column in fields
+                   if re.match(expr, column)]
+        if columns:
+            print("Expression: '%s' matched these columns:" % expr)
+            print('\n'.join(columns))
+            return columns
+        else:
+            raise NoMatch("No matching column found for '%s'" % expr)
+
+    # If x_expr is provided, match on that.
+    if x_expr:
+        x_column = _matches(x_expr, fieldnames)[0]
+    # Otherwise, just take the first field.
+    else:
+        x_column = fieldnames[0]
+
+    # In any case, remove the x column from fieldnames so it
+    # won't be matched by any y-expression.
+    fieldnames.remove(x_column)
+
+    # Get all matching Y columns
+    y_columns = sum([_matches(y_expr, fieldnames)
+                     for y_expr in y_exprs],
+                    [])
+
+    return (x_column, y_columns)
 
 
 class Graph (object):
     """A graph of data from a CSV file.
     """
-    def __init__(self, csv_file, x_expr='', y_exprs=['.*'], title='',
-                 date_format='guess', line_style=''):
-        """Create a graph from `csvfile`, with `x_expr` defining the x-axis,
-        and `y_exprs` being columns to get y-values from.
+    # Graph configuration setting types
+    strings = [
+        'x',
+        'dateformat',
+        'title',
+        'linestyle',
+        'xlabel',
+        'ylabel',
+    ]
+    ints = [
+        'gmtoffset',
+        'truncate',
+        'top',
+        'drop',
+        'peak',
+    ]
+    floats = [
+        'ymax',
+    ]
+    bools = [
+        'zerotime',
+    ]
+
+    def __init__(self, csv_file, **kwargs):
+        """Create a graph from `csvfile`.
         """
-        # TODO: Allow setting all of these with keyword arguments
         self.csv_file = csv_file
-        self.x_expr = x_expr
-        self.y_exprs = y_exprs
-        self.title = title or csv_file
-        self.date_format = date_format
-        self.line_style = line_style
-        self.gmt_offset = 0
-        self.xlabel = ''
-        self.ylabel = ''
-        self.ymax = 0
-        self.truncate = 0
-        self.top = 0
-        self.peak = 0
-        self.zero_time = False
+
+        # Default configuration
+        self.config = {
+            'x': '',
+            'y': ['.*'],
+            'title': csv_file,
+            'xlabel': '',
+            'ylabel': '',
+            'ymax': 0,
+            'truncate': 0,
+            'top': 0,
+            'peak': 0,
+            'drop': 0,
+            'zerotime': False,
+            'linestyle': '',
+            'dateformat': 'guess',
+            'gmtoffset': 0,
+        }
+        # Update default configuration with keyword args
+        self.config.update(kwargs)
+
         # These will be set by generate()
         self.figure = None
         self.figtitle = None
         self.axes = None
         self.legend = None
 
+    def __getitem__(self, name):
+        """Get the configuration setting with the given ``name``.
+        """
+        return self.config[name]
+
+    def __setitem__(self, name, value):
+        """Set the configuration setting ``name`` to ``value``.
+        """
+        self.config[name] = value
 
     def guess_date_format(self, date_column):
         """Try to guess the date format used in the current .csv file, by
@@ -190,17 +268,18 @@ class Graph (object):
 
         # Attempt to match column names
         try:
-            x_column, y_columns = self.match_columns(reader.fieldnames)
+            x_column, y_columns = match_columns(
+                reader.fieldnames, self['x'], self['y'])
         except NoMatch as err:
             runtime_error(err)
 
         # Do we need to guess what format the date is in?
-        if self.date_format == 'guess':
-            self.date_format = self.guess_date_format(x_column)
+        if self['dateformat'] == 'guess':
+            self['dateformat'] = self.guess_date_format(x_column)
 
         # Read each row in the .csv file and populate x and y value lists
         x_values, y_values = read_csv_values(reader,
-            x_column, y_columns, self.date_format, self.gmt_offset, self.zero_time)
+            x_column, y_columns, self['dateformat'], self['gmtoffset'], self['zerotime'])
 
         # Create the figure and plot
         self.figure = pylab.figure()
@@ -208,98 +287,56 @@ class Graph (object):
         self.axes.grid(True)
 
         # Label X-axis with provided label, or column name
-        self.axes.set_xlabel(self.xlabel or x_column)
+        self.axes.set_xlabel(self['xlabel'] or x_column)
 
         # Add graph title if provided
-        if self.title:
-            self.figtitle = self.figure.suptitle(self.title, fontsize=18)
+        if self['title']:
+            self.figtitle = self.figure.suptitle(self['title'], fontsize=18)
 
         # Do date formatting of axis labels if the X column is a date field
-        if self.date_format:
+        if self['dateformat']:
             self.add_date_labels(min(x_values), max(x_values))
             self.figure.autofmt_xdate()
 
         # Get the top n by average?
-        if self.top:
-            y_columns = top_by_average(self.top, y_columns, y_values)
-            print("********** Top %d columns by average:" % self.top)
+        if self['top']:
+            y_columns = top_by_average(self['top'], y_columns, y_values, self['drop'])
+            print("********** Top %d columns by average:" % self['top'])
             print('\n'.join(y_columns))
         # Get the top n by peak?
-        elif self.peak:
-            y_columns = top_by_peak(self.peak, y_columns, y_values)
-            print("********** Top %d columns by peak:" % self.peak)
+        elif self['peak']:
+            y_columns = top_by_peak(self['peak'], y_columns, y_values, self['drop'])
+            print("********** Top %d columns by peak:" % self['peak'])
             print('\n'.join(y_columns))
 
         # Plot lines for all Y columns
         lines = []
         for y_col in y_columns:
-            line = self.axes.plot(x_values, y_values[y_col], self.line_style)
+            line = self.axes.plot(x_values, y_values[y_col], self['linestyle'])
             lines.append(line)
 
         # Set Y-limit if provided
-        if self.ymax > 0:
-            print("Setting ymax to %s" % self.ymax)
-            self.axes.set_ylim(0, self.ymax)
+        if self['ymax'] > 0:
+            print("Setting ymax to %s" % self['ymax'])
+            self.axes.set_ylim(0, self['ymax'])
 
         # Draw a legend for the figure
         # If a Y label was given, use that; otherwise, strip
         # common prefix from labels, and use that as the Y label
-        if self.ylabel:
+        if self['ylabel']:
             labels = [col for col in y_columns]
-            self.axes.set_ylabel(self.ylabel)
+            self.axes.set_ylabel(self['ylabel'])
         else:
             prefix, labels = utils.strip_prefix(y_columns)
             self.axes.set_ylabel(prefix)
 
         # Truncate labels if desired
-        if self.truncate > 0:
-            labels = [label[0:self.truncate] for label in labels]
+        if self['truncate'] > 0:
+            labels = [label[0:self['truncate']] for label in labels]
 
         self.legend = pylab.legend(lines, labels,
             loc='upper center', bbox_to_anchor=(0.5, -0.15),
             prop={'size': 9}, ncol=3)
-
-
-    def match_columns(self, fieldnames):
-        """Match `x_expr` and `y_exprs` to all available column
-        names in `fieldnames`. Return the matched `x_column` and
-        `y_columns`. If no matches are found for any expression,
-        raise a `NoMatch` exception.
-        """
-        # Make a copy of fieldnames
-        fieldnames = [field for field in fieldnames]
-        def _matches(expr, fields):
-            """Return a list of matching column names for `expr`,
-            or raise a `NoMatch` exception if there were none.
-            """
-            # Do backslash-escape of expressions
-            expr = expr.encode('unicode_escape')
-            columns = [column for column in fields
-                       if re.match(expr, column)]
-            if columns:
-                print("Expression: '%s' matched these columns:" % expr)
-                print('\n'.join(columns))
-                return columns
-            else:
-                raise NoMatch("No matching column found for '%s'" % expr)
-
-        # If x_expr is provided, match on that.
-        if self.x_expr:
-            x_column = _matches(self.x_expr, fieldnames)[0]
-        # Otherwise, just take the first field.
-        else:
-            x_column = fieldnames[0]
-
-        # In any case, remove the x column from fieldnames so it
-        # won't be matched by any y-expression.
-        fieldnames.remove(x_column)
-
-        # Get all matching Y columns
-        y_columns = sum([_matches(y_expr, fieldnames)
-                         for y_expr in self.y_exprs],
-                        [])
-
-        return (x_column, y_columns)
 
 
     def add_date_labels(self, min_date, max_date):
@@ -309,6 +346,7 @@ class Graph (object):
         locator, formatter = date_locator_formatter(min_date, max_date)
         self.axes.xaxis.set_major_locator(locator)
         self.axes.xaxis.set_major_formatter(formatter)
+
 
     def save(self, filename):
         """Save the graph to a .png, .svg, or .pdf file.
@@ -328,6 +366,7 @@ class Graph (object):
             bbox_inches='tight',
             bbox_extra_artists=extra)
         print("Saved '%s' in '%s' format." % (filename, ext))
+
 
     def show(self):
         """Display the graph in a GUI window.
