@@ -75,7 +75,8 @@ def date_locator_formatter(min_date, max_date):
     return (locator, formatter)
 
 
-def read_csv_values(reader, x_column, y_columns, date_format='', gmt_offset=0):
+def read_csv_values(reader, x_column, y_columns, date_format='',
+                    gmt_offset=0, zero_time=False):
     """Read values from a csv `DictReader`, and return all values in
     `x_column` and `y_columns`.
     """
@@ -100,6 +101,12 @@ def read_csv_values(reader, x_column, y_columns, date_format='', gmt_offset=0):
             if y_col not in y_values:
                 y_values[y_col] = []
             y_values[y_col].append(utils.float_or_0(row[y_col]))
+
+    # Adjust datestamps to start at 0:00?
+    if date_format and zero_time:
+        z = min(x_values)
+        hms = timedelta(hours=z.hour, minutes=z.minute, seconds=z.second)
+        x_values = [x - hms for x in x_values]
 
     return (x_values, y_values)
 
@@ -139,6 +146,7 @@ class Graph (object):
         """Create a graph from `csvfile`, with `x_expr` defining the x-axis,
         and `y_exprs` being columns to get y-values from.
         """
+        # TODO: Allow setting all of these with keyword arguments
         self.csv_file = csv_file
         self.x_expr = x_expr
         self.y_exprs = y_exprs
@@ -152,6 +160,7 @@ class Graph (object):
         self.truncate = 0
         self.top = 0
         self.peak = 0
+        self.zero_time = False
         # These will be set by generate()
         self.figure = None
         self.figtitle = None
@@ -191,7 +200,7 @@ class Graph (object):
 
         # Read each row in the .csv file and populate x and y value lists
         x_values, y_values = read_csv_values(reader,
-            x_column, y_columns, self.date_format, self.gmt_offset)
+            x_column, y_columns, self.date_format, self.gmt_offset, self.zero_time)
 
         # Create the figure and plot
         self.figure = pylab.figure()

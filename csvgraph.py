@@ -24,14 +24,15 @@ Options:
             %m/%d/%y %I:%M:%S %p: 12/10/09 3:45:56 PM (Grinder logs)
             %m/%d/%Y %H:%M:%S.%f: 12/10/2009 15:45:56.789 (Perfmon)
         See http://docs.python.org/library/datetime.html for valid formats.
-        The Perfmon date format is the default. If the X-column
-        is NOT a date, use -dateformat ""
+        By default, the date format will be guessed based on the first row of
+        the .csv file. If the X-column is NOT a date, use -dateformat ""
 
     -title "Title"
-        Set the title label for the graph. Default: No title.
+        Set the title label for the graph. By default, the .csv filename
+        is used as the graph title.
 
     -save "filename.(png|svg|pdf)"
-        Save the graph to a file. Default: Show the graph in a viewer.
+        Save the graph to a file. Default is to show the graph in a viewer.
 
     -linestyle "<format string>"
         Define the style of lines plotted on the graph. Examples are:
@@ -41,11 +42,6 @@ Options:
             "o-" Circle + solid lines
         See the Matplotlib Axes.plot documentation for available styles:
         http://matplotlib.sourceforge.net/api/axes_api.html#matplotlib.axes.Axes.plot
-
-    -gmt [+/-]<hours>
-        Adjust timestamps if they are not in GMT. For example, if the
-        timestamps are GMT-6, use -gmt +6 to make the graph display them
-        as GMT times.
 
     -xlabel "Label string"
         Use the given string as the label of the X axis. If omitted, the
@@ -70,6 +66,14 @@ Options:
     -peak <number>
         Graph only the top <number> columns, based on the highest peak
         value in matching columns.
+
+    -gmt [+/-]<hours>
+        Adjust timestamps if they are not in GMT. For example, if the
+        timestamps are GMT-6, use -gmt +6 to make the graph display them
+        as GMT times.
+
+    -zerotime
+        Adjust all timestamps so the graph starts at 00:00.
 
 If no column names are given, then all columns are graphed. To graph only
 specific columns, provide one or more column expressions after the .csv
@@ -169,6 +173,9 @@ if __name__ == '__main__':
 
         elif opt == '-peak':
             graph.peak = int(args.pop(0))
+
+        elif opt == '-zerotime':
+            graph.zero_time = True
 
         else:
             usage_error("Unknown option: %s" % opt)
