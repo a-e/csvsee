@@ -3,18 +3,6 @@
 """Provides a `Graph` class for creating graphs from ``.csv`` data files.
 """
 
-# TODO
-# ----
-
-# The graph legend looks terrible almost all the time. It does especially badly
-# with really long column names, and more than about 6 columns.
-
-# Possible solutions:
-# - Truncate all column names so they will fit
-# - Make larger graphs to ensure the legend won't overlap the graph
-# - Write legend to a separate image
-
-
 import sys
 import csv
 import re
@@ -145,6 +133,7 @@ def match_columns(fieldnames, x_expr, y_exprs):
     """
     # Make a copy of fieldnames
     fieldnames = [field for field in fieldnames]
+
     def _matches(expr, fields):
         """Return a list of matching column names for `expr`,
         or raise a `NoMatch` exception if there were none.

@@ -18,14 +18,15 @@ usage = __doc__
 
 import sys
 
-from csvsee.graph import Graph
+from csvsee import utils, graph
 
 class UsageError (Exception):
     pass
 
 
 def graph_command(args):
-    """graph: Generage graphs from .csv data files.
+    """
+    graph: Generage graphs from .csv data files.
 
     Usage::
 
@@ -134,7 +135,7 @@ def graph_command(args):
         raise UsageError("First argument must be a filename with .csv extension.")
 
     # Create Graph for this csv file
-    graph = Graph(csv_file)
+    graph = graph.Graph(csv_file)
 
     save_file = ''
 
@@ -172,9 +173,53 @@ def graph_command(args):
 
 
 def grep_command(args):
-    """Search for text and make a csv file.
     """
-    pass
+    grep: Create a .csv file by counting the number of occurrences of
+    text strings in one or more timestamped text files.
+
+    Usage::
+
+        csvgrep.py <file1> <file2> -match <expr1> <expr2> -out <report.csv>
+    """
+    # TODO: Regular expressions
+    # TODO: Custom date format
+    # TODO: Customizable granularity
+
+    # Need at least five arguments
+    if len(args) < 5:
+        raise UsageError()
+
+    infiles = []
+    matches = []
+    csvfile = ''
+
+    # Get input filenames until an -option is reached
+    while args and not args[0].startswith('-'):
+        infiles.append(args.pop(0))
+
+    while args:
+        opt = args.pop(0)
+        if opt == '-match':
+            while not args[0].startswith('-'):
+                matches.append(args.pop(0))
+        elif opt == '-out':
+            csvfile = args.pop(0)
+        else:
+            raise UsageError("Unknown option: '%s'" % opt)
+
+    # Search all the given files for matching text, and write the results to
+    # csvfile, with the first column being the timestamp, and remaining columns
+    # being the number of times each match was found.
+    outfile = open(csvfile, 'w')
+    heading = '"Timestamp","%s"' % '","'.join(matches)
+    outfile.write(heading + '\n')
+    for (timestamp, counts) in utils.grep_files(infiles, matches):
+        line = '%s' % timestamp
+        for match in matches:
+            line += ',%s' % counts[match]
+        outfile.write(line + '\n')
+    outfile.close()
+
 
 
 # Commands and the function that handles them

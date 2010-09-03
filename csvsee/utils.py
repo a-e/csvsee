@@ -114,3 +114,38 @@ def date_chop(line, date_format='%m/%d/%y %I:%M:%S %p'):
     return timestamp.strftime('%Y/%m/%d %H:%M')
 
 
+def grep_files(filenames, matches):
+    """Search all the given files for matching text, and return
+    a list of ``(match, count)`` for each match.
+    """
+    # Counts of each match, used as a template for each row
+    row_temp = [(match, 0) for match in matches]
+    rows = {}
+    # Read each line of each file
+    for filename in filenames:
+        print("Reading '%s' ..." % filename)
+        # HACK: Fake timestamp in case no real timestamps are ever found
+        timestamp = "00:00"
+        for line in open(filename, 'r'):
+            # See if this line has a timestamp
+            try:
+                line_timestamp = date_chop(line)
+            # No timestamp found, stick with the current one
+            except ValueError:
+                pass
+            # New timestamp found, switch to it
+            else:
+                timestamp = line_timestamp
+
+            # If this datestamp hasn't appeared before, add it
+            if timestamp not in rows:
+                rows[timestamp] = dict(row_temp)
+
+            # Count the number of each match in this line
+            for match in matches:
+                if match in line:
+                    rows[timestamp][match] += 1
+
+    # Return a sorted list of (match, {counts}) tuples
+    return sorted(rows.iteritems())
+
