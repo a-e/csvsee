@@ -42,17 +42,26 @@ This software is open source, under the terms of the `simplified BSD license`_.
 
 Installation
 ------------
-To install CSVSee, obtain a copy of the branch from Launchpad_ using Bazaar_::
+There are a few ways to install CSVSee. If you want to install an official release, first
+download one from the `downloads page`_, extract it, then run::
+
+    python setup.py install
+
+If you want a copy of the latest development version, branch it using Bazaar_::
 
     bzr branch lp:csvsee
 
-At present, there are no official release packages, and no installed components.
+then install as before using ``setup.py``. Finally, you could use pip_ to download
+and install the development version::
+
+    pip install -e bzr+http://bazaar.launchpad.net/~wapcaplet88/csvsee/trunk#egg=csvsee
 
 Python_ is required. The ``graph`` command also depends on matplotlib_ and
 NumPy_.
 
-.. _Launchpad: https://code.launchpad.net/csvsee
+.. _downloads page: https://launchpad.net/csvsee/+download
 .. _Bazaar: http://bazaar.canonical.com/
+.. _pip: http://pypi.python.org/pypi/pip
 .. _Python: http://python.org/download/
 .. _matplotlib: http://sourceforge.net/projects/matplotlib/files/matplotlib/matplotlib-0.99.1/
 .. _NumPy: http://sourceforge.net/projects/numpy/files/
