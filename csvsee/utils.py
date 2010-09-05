@@ -6,6 +6,7 @@
 import sys
 import csv
 from datetime import datetime
+import time
 
 
 def float_or_0(value):
@@ -30,9 +31,55 @@ def float_or_0(value):
         return 0
 
 
-def guess_date_format(date_string):
-    """Try to guess what format a given date/time string is in. If format can
-    be inferred, return the format string. Otherwise, return an empty string.
+class CannotParseDate (Exception):
+    """Failure to parse a string as a date.
+    """
+    pass
+
+
+def parse_date(string, format):
+    """Attempt to parse the given string as a date in the given format.
+    This is similar to `datetime.strptime`, but this can handle date strings
+    with trailing characters. If it still fails to parse, raise a
+    `CannotParseDate` exception.
+
+    Examples::
+
+        >>> parse_date('2010/08/28', '%Y/%m/%d')
+        datetime.datetime(2010, 8, 28, 0, 0)
+
+        >>> parse_date('2010/08/28 extra stuff', '%Y/%m/%d')
+        datetime.datetime(2010, 8, 28, 0, 0)
+
+        >>> parse_date('2010/08/28', '%m/%d/%y')
+        Traceback (most recent call last):
+        CannotParseDate: time data '2010/08/28' does not match format '%m/%d/%y'
+    """
+    try:
+        result = datetime.strptime(string, format)
+    except ValueError, err:
+        # A bit of hack here, since strptime doesn't distinguish between
+        # total failure to parse a date, and success with trailing
+        # characters. This attempts to catch the possibility where a date
+        # format matches, but there's extra stuff at the end.
+        message = str(err)
+        data_remains = 'unconverted data remains: '
+        if message.startswith(data_remains):
+            # Try again with the unconverted data removed
+            junk = message[len(data_remains):]
+            clean = string[:-1*len(junk)]
+            result = datetime.strptime(clean, format)
+        else:
+            raise CannotParseDate(message)
+
+    # If we got here, we got a result
+    return result
+
+
+def guess_date_format(string):
+    """Try to guess what date/time format a given ``string`` is in. If format
+    can be inferred, return the format string. Otherwise, raise a
+    `CannotParseDate` exception.
 
     Examples::
 
@@ -50,21 +97,39 @@ def guess_date_format(date_string):
     the format guessed might be wrong.
     """
     # Date formats to try
+    # (More specific ones are tried first, more general ones later)
     _formats = (
-        '%Y/%m/%d %H:%M',
-        '%Y/%m/%d %H:%M:%S',
         '%m/%d/%y %I:%M:%S %p',
         '%m/%d/%Y %H:%M:%S.%f',
+        '%Y/%m/%d %H:%M:%S',
+        '%Y/%m/%d %H:%M',
     )
     # Try each format and return the first one that works
     for format in _formats:
         try:
-            _result = datetime.strptime(date_string, format)
-        except ValueError:
+            temp = parse_date(string, format)
+        except CannotParseDate:
             pass
         else:
             return format
-    return ''
+
+    raise CannotParseDate("Could not guess date format in: '%s'" % string)
+
+
+def guess_file_date_format(filename):
+    """Open the given file and look for anything that looks like a date/time
+    at the beginning of each line. Return the format string for the first
+    one that's found, or ``None`` if none are found.
+    """
+    for line in open(filename):
+        try:
+            format = guess_date_format(line)
+        except CannotParseDate:
+            pass
+        else:
+            return format
+
+    raise CannotParseDate("No date/time strings found in '%s'" % filename)
 
 
 def strip_prefix(strings):
@@ -105,16 +170,34 @@ def print_columns(csv_file):
     print('\n'.join(columns))
 
 
-def date_chop(line, date_format='%m/%d/%y %I:%M:%S %p'):
-    """Return the date/time portion of a given line, truncated to minutes.
+def date_chop(line, dateformat='%m/%d/%y %I:%M:%S %p', resolution=60):
+    """Given a ``line`` of text, get a date/time formatted as ``dateformat``,
+    and return a `datetime` object rounded to the nearest ``resolution``
+    seconds. If ``line`` fails to match ``dateformat``, a `CannotParseDate`
+    exception is raised.
+
+    Examples::
+
+        >>> date_chop('1976/05/19 12:05:17', '%Y/%m/%d %H:%M:%S', 60)
+        datetime.datetime(1976, 5, 19, 12, 5)
+
+        >>> date_chop('1976/05/19 12:05:17', '%Y/%m/%d %H:%M:%S', 3600)
+        datetime.datetime(1976, 5, 19, 12, 0)
+
     """
-    # FIXME: Make this more generic, possibly using guess_date_format
-    date_part = ' '.join(line.split()[0:3])
-    timestamp = datetime.strptime(date_part, date_format)
-    return timestamp.strftime('%Y/%m/%d %H:%M')
+    timestamp = parse_date(line, dateformat)
+    # Round the timestamp to the given resolution
+    # First convert to seconds-since-epoch
+    epoch_seconds = int(time.mktime(timestamp.timetuple()))
+    # Then do integer division to truncate
+    rounded_seconds = (epoch_seconds / resolution) * resolution
+    # Convert back to a datetime
+    return datetime.fromtimestamp(rounded_seconds)
 
 
-def grep_files(filenames, matches):
+def grep_files(filenames, matches,
+               dateformat='guess',
+               resolution=60):
     """Search all the given files for matching text, and return
     a list of ``(match, count)`` for each match.
     """
@@ -124,14 +207,18 @@ def grep_files(filenames, matches):
     # Read each line of each file
     for filename in filenames:
         print("Reading '%s' ..." % filename)
+        # Guess date format?
+        if not dateformat or dateformat == 'guess':
+            dateformat = guess_file_date_format(filename)
+
         # HACK: Fake timestamp in case no real timestamps are ever found
         timestamp = "00:00"
         for line in open(filename, 'r'):
             # See if this line has a timestamp
             try:
-                line_timestamp = date_chop(line)
+                line_timestamp = date_chop(line, dateformat, resolution)
             # No timestamp found, stick with the current one
-            except ValueError:
+            except CannotParseDate:
                 pass
             # New timestamp found, switch to it
             else:

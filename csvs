@@ -18,7 +18,8 @@ usage = __doc__
 
 import sys
 
-from csvsee import utils, graph
+from csvsee import utils
+from csvsee.graph import Graph
 
 class UsageError (Exception):
     pass
@@ -30,7 +31,7 @@ def graph_command(args):
 
     Usage::
 
-        csvgraph.py filename.csv [-options] ["Column 1"] ["Column 2"] ...
+        csvs graph filename.csv [-options] ["Column 1"] ["Column 2"] ...
 
     Where filename.csv contains comma-separated values, with column names in the
     first row, and all subsequent arguments are regular expressions that may match
@@ -135,7 +136,7 @@ def graph_command(args):
         raise UsageError("First argument must be a filename with .csv extension.")
 
     # Create Graph for this csv file
-    graph = graph.Graph(csv_file)
+    graph = Graph(csv_file)
 
     save_file = ''
 
@@ -179,11 +180,22 @@ def grep_command(args):
 
     Usage::
 
-        csvgrep.py <file1> <file2> -match <expr1> <expr2> -out <report.csv>
+        csvs grep <file1> <file2> -match <expr1> <expr2> -out <report.csv> [-options]
+
+    Options::
+
+        -seconds <number>
+            Report match frequency with a granularity of <number> seconds. The
+            default is 60 seconds (1 minute); that is, each line of the .csv
+            output will include the count of all matches during each minute.
+
+        -dateformat "<format string>"
+            Interpret date/time using the given format. If omitted, the format
+            is inferred by guessing.
+            See http://docs.python.org/library/datetime.html for valid formats.
+
     """
     # TODO: Regular expressions
-    # TODO: Custom date format
-    # TODO: Customizable granularity
 
     # Need at least five arguments
     if len(args) < 5:
@@ -192,6 +204,8 @@ def grep_command(args):
     infiles = []
     matches = []
     csvfile = ''
+    dateformat = ''
+    seconds = 60
 
     # Get input filenames until an -option is reached
     while args and not args[0].startswith('-'):
@@ -204,6 +218,10 @@ def grep_command(args):
                 matches.append(args.pop(0))
         elif opt == '-out':
             csvfile = args.pop(0)
+        elif opt == '-dateformat':
+            dateformat = args.pop(0)
+        elif opt == '-seconds':
+            seconds = int(args.pop(0))
         else:
             raise UsageError("Unknown option: '%s'" % opt)
 
@@ -213,12 +231,13 @@ def grep_command(args):
     outfile = open(csvfile, 'w')
     heading = '"Timestamp","%s"' % '","'.join(matches)
     outfile.write(heading + '\n')
-    for (timestamp, counts) in utils.grep_files(infiles, matches):
+    for (timestamp, counts) in utils.grep_files(infiles, matches, dateformat, seconds):
         line = '%s' % timestamp
         for match in matches:
             line += ',%s' % counts[match]
         outfile.write(line + '\n')
     outfile.close()
+    print("Wrote '%s'" % csvfile)
 
 
 
