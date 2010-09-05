@@ -20,6 +20,7 @@ import sys
 
 from csvsee import utils
 from csvsee.graph import Graph
+from csvsee import grinder
 
 class UsageError (Exception):
     pass
@@ -240,11 +241,56 @@ def grep_command(args):
     print("Wrote '%s'" % csvfile)
 
 
+def grinder_command(args):
+    """grinder: Generate a .csv report of data from Grinder log files.
+
+    Usage::
+
+        csvs grinder [-options] <out_file> <data_files ...> <csv_prefix>
+
+    Options::
+
+        -seconds <number>
+            Summarize statistics over an interval of <number> seconds.
+            Default is 60-second intervals.
+
+    This will generate one .csv file for each of several important statistics.
+    """
+    # Defaults
+    resolution = 60
+
+    # Get any -options
+    while args and args[0].startswith('-'):
+        opt = args.pop(0)
+        if opt == '-seconds':
+            resolution = int(args.pop(0))
+        else:
+            raise UsageError("Unknown option: '%s'" % opt)
+
+    # Need at least three positional arguments
+    if len(args) < 3:
+        raise UsageError()
+
+    # Get positional arguments
+    out_file = args[0]
+    data_files = args[1:-1]
+    csv_prefix = args[-1]
+
+    # Generate the report
+    report = grinder.Report(resolution, out_file, *data_files)
+
+    # Write one .csv file for each statistic
+    for stat in grinder.Test.all_stats:
+        csv_filename = "%s_%s.csv" % (csv_prefix, stat.replace(' ', '_'))
+        print("Writing %s" % csv_filename)
+        report.write_csv(stat, csv_filename)
+
 
 # Commands and the function that handles them
 command_functions = {
     'graph': graph_command,
     'grep': grep_command,
+    'grinder': grinder_command,
 }
 
 

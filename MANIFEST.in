@@ -1,0 +1,4 @@
+include LICENSE.txt
+recursive-include docs Makefile conf.py *.rst
+recursive-include docs/_static *
+

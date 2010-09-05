@@ -78,3 +78,32 @@ count the occurrences each hour, use ``-seconds 3600``.
 
 Run ``csvs grep`` without arguments to see full usage notes.
 
+
+csvs grinder
+------------
+
+The ``grinder`` command generates ``.csv`` files from Grinder_ logs. You must
+provide the name of a ``out*`` file, and one or more ``data*`` files generated
+from the same test run::
+
+    csvs grinder out-0.log data-*.log foo
+
+This will write four ``.csv`` files in the current directory:
+
+* ``foo_Errors.csv``
+* ``foo_HTTP_response_errors.csv``
+* ``foo_HTTP_response_length.csv``
+* ``foo_Test_time.csv``
+
+By default, statistics are summarized with a 60-second resolution; that is, all
+statistics within each 60-second interval are summed (in the case of errors) or
+averaged (in the case of response length and test time). To change the interval
+resolution, pass the ``-seconds`` option. For instance, to summarize statistics
+in 10-minute intervals::
+
+    csvs grinder -seconds 600 out-0.log data-*.log foo
+
+Run ``csvs grinder`` without arguments to see full usage notes.
+
+.. _Grinder: http://grinder.sourceforge.net/
+
