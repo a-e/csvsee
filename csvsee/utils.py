@@ -98,11 +98,25 @@ def guess_date_format(string):
     """
     # Date formats to try
     # (More specific ones are tried first, more general ones later)
+    # FIXME: This could quickly get out of control, with different ways of
+    # combining dates and times, especially if alternate separators are
+    # allowed ('/' vs. '-'). Find a way to simplify and generalize this.
     _formats = (
+        '%Y/%m/%d %I:%M:%S %p',
+        '%m/%d/%Y %I:%M:%S %p',
         '%m/%d/%y %I:%M:%S %p',
+
+        '%Y/%m/%d %H:%M:%S.%f',
         '%m/%d/%Y %H:%M:%S.%f',
+        '%m/%d/%y %H:%M:%S.%f',
+
         '%Y/%m/%d %H:%M:%S',
+        '%m/%d/%Y %H:%M:%S',
+        '%m/%d/%y %H:%M:%S',
+
         '%Y/%m/%d %H:%M',
+        '%m/%d/%Y %H:%M',
+        '%m/%d/%y %H:%M',
     )
     # Try each format and return the first one that works
     for format in _formats:
@@ -198,8 +212,10 @@ def date_chop(line, dateformat='%m/%d/%y %I:%M:%S %p', resolution=60):
 def grep_files(filenames, matches,
                dateformat='guess',
                resolution=60):
-    """Search all the given files for matching text, and return
-    a list of ``(match, count)`` for each match.
+    """Search all the given files for matching text, and return a list of
+    ``(timestamp, counts)`` for each match, where ``timestamp`` is a
+    ``datetime``, and ``counts`` is a dictionary of ``{match: count}``,
+    counting the number of times each match was found during that interval.
     """
     # Counts of each match, used as a template for each row
     row_temp = [(match, 0) for match in matches]
@@ -212,8 +228,12 @@ def grep_files(filenames, matches,
             dateformat = guess_file_date_format(filename)
 
         # HACK: Fake timestamp in case no real timestamps are ever found
-        timestamp = "00:00"
+        timestamp = datetime(1970, 1, 1)
         for line in open(filename, 'r'):
+            # If line is empty, skip it
+            if line.strip() == '':
+                continue
+
             # See if this line has a timestamp
             try:
                 line_timestamp = date_chop(line, dateformat, resolution)
