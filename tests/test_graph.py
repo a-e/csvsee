@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# graph_tests.py
+# test_graph.py
 
 """Unit tests for the csvsee.graph module
 """

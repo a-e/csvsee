@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# dates_tests.py
+# test_dates.py
 
 """Unit tests for the csvsee.dates module
 """

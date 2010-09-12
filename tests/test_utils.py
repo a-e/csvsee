@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# utils_tests.py
+# test_utils.py
 
 """Unit tests for the csvsee.utils module
 """
