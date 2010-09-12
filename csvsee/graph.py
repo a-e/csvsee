@@ -99,31 +99,51 @@ def read_csv_values(reader, x_column, y_columns, date_format='',
     return (x_values, y_values)
 
 
+def top_by(func, count, y_columns, y_values, drop=0):
+    """Apply ``func`` to each column, and return the top ``count`` column
+    names. Arguments:
+
+        func
+            A function that takes a list of values and returns a single value.
+            `max`, `min`, and average are good examples.
+        count
+            How many of the "top" values to keep
+        y_columns
+            A list of candidate column names. All of these must
+            exist as keys in ``y_values``
+        y_values
+            Dictionary of ``{column: values}`` for each y-column. Must have
+            data for each column in ``y_columns`` (any extra column data will
+            be ignored).
+        drop
+            How many top values to skip before returning the next
+            ``count`` top columns
+
+    """
+    # List of (func(ys), y_name)
+    results = []
+    for y_name in y_columns:
+        f_ys = func(y_values[y_name])
+        results.append((f_ys, y_name))
+    # Keep the top ``count`` after dropping ``drop`` values
+    sorted_columns = [y_name for (f_ys, y_name) in reversed(sorted(results))]
+    return sorted_columns[drop:drop+count]
+
+
 def top_by_average(count, y_columns, y_values, drop=0):
     """Determine the top ``count`` columns based on the average of values
     in ``y_values``, and return the filtered ``y_columns`` names.
     """
-    averages = []
-    for column in y_columns:
-        values = y_values[column]
-        avg = sum(values) / len(values)
-        averages.append((avg, column))
-    # Keep the top n averages
-    sorted_columns = [col for (avg, col) in reversed(sorted(averages))]
-    return sorted_columns[drop:drop+count]
+    def avg(values):
+        return float(sum(values)) / len(values)
+    return top_by(avg, count, y_columns, y_values, drop)
 
 
 def top_by_peak(count, y_columns, y_values, drop=0):
     """Determine the top ``count`` columns based on the peak value
     in ``y_values``, and return the filtered ``y_columns`` names.
     """
-    peaks = []
-    for column in y_columns:
-        peak = max(y_values[column])
-        peaks.append((peak, column))
-    # Keep the top n peaks
-    sorted_columns = [col for (peak, col) in reversed(sorted(peaks))]
-    return sorted_columns[drop:drop+count]
+    return top_by(max, count, y_columns, y_values, drop)
 
 
 def match_columns(fieldnames, x_expr, y_exprs):
