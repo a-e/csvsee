@@ -7,6 +7,7 @@ It consists of several submodules:
 .. toctree::
     :maxdepth: 2
 
+    dates
     utils
     graph
     grinder
