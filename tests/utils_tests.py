@@ -39,7 +39,7 @@ def write_test_data(filename, data):
     outfile.close()
 
 
-class TestUtils (unittest.TestCase):
+class TestLogs (unittest.TestCase):
     def setUp(self):
         """Create .log and .csv files to test on.
         """
@@ -59,6 +59,29 @@ class TestUtils (unittest.TestCase):
         shutil.rmtree(self.tempdir)
 
 
+class TestDates (TestLogs):
+    def test_date_guessing(self):
+        """Test the date-format-guessing functions.
+        """
+        # Guess format in a log file
+        format = utils.guess_file_date_format(self.test_log)
+        self.assertEqual(format, '%Y/%m/%d %H:%M:%S')
+
+        # TODO: Guess format in a .csv file
+
+        # Guess formats from a string
+        date_formats = [
+            ('2010/01/28 12:34:56 PM', '%Y/%m/%d %I:%M:%S %p'),
+            ('01/28/10 1:25:49 PM', '%m/%d/%y %I:%M:%S %p'),
+            ('01/28/2010 13:25:49.123', '%m/%d/%Y %H:%M:%S.%f'),
+            # Consider supporting alternative separators
+            #('2010-01-28 12:34:56 PM', '%Y-%m-%d %I:%M:%S %p'),
+        ]
+        for date, format in date_formats:
+            self.assertEqual(utils.guess_date_format(date), format)
+
+
+class TestGrep (TestLogs):
     def test_grep(self):
         """Test grepping in text files.
         """
@@ -88,26 +111,49 @@ class TestUtils (unittest.TestCase):
         self.assertEqual(counts, expected)
 
 
+class TestTop (unittest.TestCase):
+    def setUp(self):
+        pass
 
-    def test_date_guessing(self):
-        """Test the date-format-guessing functions.
+    def tearDown(self):
+        pass
+
+    def test_top_by_avg(self):
+        """Test the `top_by_avg` function.
         """
-        # Guess format in a log file
-        format = utils.guess_file_date_format(self.test_log)
-        self.assertEqual(format, '%Y/%m/%d %H:%M:%S')
+        data = {
+            'a': [2, 2, 2, 2, 2],
+            'b': [1, 2, 2, 2, 2],
+            'c': [1, 1, 2, 2, 2],
+            'd': [1, 1, 1, 2, 2],
+            'e': [1, 1, 1, 1, 2],
+        }
+        top3 = utils.top_by_average(3, data.keys(), data)
+        self.assertEqual(top3, ['a', 'b', 'c'])
 
-        # TODO: Guess format in a .csv file
+        bottom3 = utils.top_by_average(3, data.keys(), data, drop=2)
+        self.assertEqual(bottom3, ['c', 'd', 'e'])
 
-        # Guess formats from a string
-        date_formats = [
-            ('2010/01/28 12:34:56 PM', '%Y/%m/%d %I:%M:%S %p'),
-            ('01/28/10 1:25:49 PM', '%m/%d/%y %I:%M:%S %p'),
-            ('01/28/2010 13:25:49.123', '%m/%d/%Y %H:%M:%S.%f'),
-            # Consider supporting alternative separators
-            #('2010-01-28 12:34:56 PM', '%Y-%m-%d %I:%M:%S %p'),
-        ]
-        for date, format in date_formats:
-            self.assertEqual(utils.guess_date_format(date), format)
+
+    def test_top_by(self):
+        """Test the `top_by` function.
+        """
+        data = {
+            'a': [5, 5, 5],
+            'b': [4, 4, 6],
+            'c': [3, 3, 7],
+            'd': [2, 2, 8],
+            'e': [1, 1, 9],
+        }
+        # Top 3 sums
+        self.assertEqual(
+            utils.top_by(sum, 3, data.keys(), data),
+            ['a', 'b', 'c'])
+
+        # Top 3 maximums
+        self.assertEqual(
+            utils.top_by(max, 3, data.keys(), data),
+            ['e', 'd', 'c'])
 
 
 if __name__ == '__main__':

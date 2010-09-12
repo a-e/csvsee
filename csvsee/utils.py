@@ -256,3 +256,93 @@ def grep_files(filenames, matches,
     # Return a sorted list of (match, {counts}) tuples
     return sorted(rows.iteritems())
 
+
+def top_by(func, count, y_columns, y_values, drop=0):
+    """Apply ``func`` to each column, and return the top ``count`` column
+    names. Arguments:
+
+        func
+            A function that takes a list of values and returns a single value.
+            `max`, `min`, and average are good examples.
+        count
+            How many of the "top" values to keep
+        y_columns
+            A list of candidate column names. All of these must
+            exist as keys in ``y_values``
+        y_values
+            Dictionary of ``{column: values}`` for each y-column. Must have
+            data for each column in ``y_columns`` (any extra column data will
+            be ignored).
+        drop
+            How many top values to skip before returning the next
+            ``count`` top columns
+
+    """
+    # List of (func(ys), y_name)
+    results = []
+    for y_name in y_columns:
+        f_ys = func(y_values[y_name])
+        results.append((f_ys, y_name))
+    # Keep the top ``count`` after dropping ``drop`` values
+    sorted_columns = [y_name for (f_ys, y_name) in reversed(sorted(results))]
+    return sorted_columns[drop:drop+count]
+
+
+def top_by_average(count, y_columns, y_values, drop=0):
+    """Determine the top ``count`` columns based on the average of values
+    in ``y_values``, and return the filtered ``y_columns`` names.
+    """
+    def avg(values):
+        return float(sum(values)) / len(values)
+    return top_by(avg, count, y_columns, y_values, drop)
+
+
+def top_by_peak(count, y_columns, y_values, drop=0):
+    """Determine the top ``count`` columns based on the peak value
+    in ``y_values``, and return the filtered ``y_columns`` names.
+    """
+    return top_by(max, count, y_columns, y_values, drop)
+
+
+def match_columns(fieldnames, x_expr, y_exprs):
+    """Match `x_expr` and `y_exprs` to all available column names in
+    `fieldnames`. Return the matched `x_column` and `y_columns`. If no matches
+    are found for any expression, raise a `NoMatch` exception.
+    """
+    # Make a copy of fieldnames
+    fieldnames = [field for field in fieldnames]
+
+    def _matches(expr, fields):
+        """Return a list of matching column names for `expr`,
+        or raise a `NoMatch` exception if there were none.
+        """
+        # Do backslash-escape of expressions
+        expr = expr.encode('unicode_escape')
+        columns = [column for column in fields
+                   if re.match(expr, column)]
+        if columns:
+            print("Expression: '%s' matched these columns:" % expr)
+            print('\n'.join(columns))
+            return columns
+        else:
+            raise NoMatch("No matching column found for '%s'" % expr)
+
+    # If x_expr is provided, match on that.
+    if x_expr:
+        x_column = _matches(x_expr, fieldnames)[0]
+    # Otherwise, just take the first field.
+    else:
+        x_column = fieldnames[0]
+
+    # In any case, remove the x column from fieldnames so it
+    # won't be matched by any y-expression.
+    fieldnames.remove(x_column)
+
+    # Get all matching Y columns
+    y_columns = sum([_matches(y_expr, fieldnames)
+                     for y_expr in y_exprs],
+                    [])
+
+    return (x_column, y_columns)
+
+
