@@ -11,11 +11,6 @@ from datetime import datetime, timedelta
 from csvsee import utils
 
 
-class NoMatch (Exception):
-    """Exception raised when no column name matches a given expression."""
-    pass
-
-
 def runtime_error(message):
     """Print an error message, then exit.
     """
@@ -24,9 +19,10 @@ def runtime_error(message):
 
 
 def date_locator_formatter(min_date, max_date):
-    """Determine suitable locator and format to use for a range of dates.
-    Returns `(locator, formatter)` where `locator` is an `RRuleLocator`,
-    and `formatter` is a `DateFormatter`.
+    """Determine suitable locator and format to use for dates between
+    ``min_date`` and ``max_date``, inclusive. Returns ``(locator, formatter)``
+    where ``locator`` is an `RRuleLocator`, and ``formatter`` is a
+    `DateFormatter`.
     """
     from matplotlib import dates
 
@@ -63,42 +59,6 @@ def date_locator_formatter(min_date, max_date):
     return (locator, formatter)
 
 
-def read_csv_values(reader, x_column, y_columns, date_format='',
-                    gmt_offset=0, zero_time=False):
-    """Read values from a csv `DictReader`, and return all values in
-    `x_column` and `y_columns`.
-    """
-    x_values = []
-    y_values = {}
-
-    for row in reader:
-        x_value = row[x_column]
-
-        # If X is supposed to be a date, try to convert it
-        if date_format:
-            x_value = datetime.strptime(x_value, date_format) + \
-                timedelta(hours=gmt_offset)
-        # Otherwise, assume it's a floating-point numeric value
-        else:
-            x_value = utils.float_or_0(x_value)
-
-        x_values.append(x_value)
-
-        # Append Y values from each column
-        for y_col in y_columns:
-            if y_col not in y_values:
-                y_values[y_col] = []
-            y_values[y_col].append(utils.float_or_0(row[y_col]))
-
-    # Adjust datestamps to start at 0:00?
-    if date_format and zero_time:
-        z = min(x_values)
-        hms = timedelta(hours=z.hour, minutes=z.minute, seconds=z.second)
-        x_values = [x - hms for x in x_values]
-
-    return (x_values, y_values)
-
-
 class Graph (object):
     """A graph of data from a CSV file.
     """
@@ -126,7 +86,7 @@ class Graph (object):
     ]
 
     def __init__(self, csv_file, **kwargs):
-        """Create a graph from `csvfile`.
+        """Create a graph from data in ``csv_file``.
         """
         self.csv_file = csv_file
 
@@ -156,19 +116,22 @@ class Graph (object):
         self.axes = None
         self.legend = None
 
+
     def __getitem__(self, name):
         """Get the configuration setting with the given ``name``.
         """
         return self.config[name]
+
 
     def __setitem__(self, name, value):
         """Set the configuration setting ``name`` to ``value``.
         """
         self.config[name] = value
 
+
     def guess_date_format(self, date_column):
-        """Try to guess the date format used in the current .csv file, by
-        reading ``date_column`` from the first row.
+        """Try to guess the date format used in the current ``.csv`` file, by
+        reading from the first row of the ``date_column`` column.
         """
         infile = open(self.csv_file, 'r')
         reader = csv.DictReader(infile)
@@ -190,7 +153,7 @@ class Graph (object):
         try:
             x_column, y_columns = utils.match_columns(
                 reader.fieldnames, self['x'], self['y'])
-        except NoMatch as err:
+        except utils.NoMatch as err:
             runtime_error(err)
 
         # Do we need to guess what format the date is in?
@@ -198,7 +161,7 @@ class Graph (object):
             self['dateformat'] = self.guess_date_format(x_column)
 
         # Read each row in the .csv file and populate x and y value lists
-        x_values, y_values = read_csv_values(reader,
+        x_values, y_values = utils.read_csv_values(reader,
             x_column, y_columns, self['dateformat'], self['gmtoffset'], self['zerotime'])
 
         # Create the figure and plot
@@ -269,12 +232,16 @@ class Graph (object):
 
 
     def save(self, filename):
-        """Save the graph to a .png, .svg, or .pdf file.
+        """Save the graph to ``filename``. The format is determined by the
+        extension of ``filename``; if it's not ``png``, ``svg``, or ``pdf``,
+        then ``png`` format is used.
         """
         ext = filename[-3:]
-        if ext not in ('png',  'svg', 'pdf'):
+        if ext not in ('png', 'svg', 'pdf'):
             print("File extension '%s' unknown. Assuming 'png'." % ext)
             ext = 'png'
+            filename += '.png'
+
         # Ensure that title and legend don't get cropped out
         extra = [
             self.legend.legendPatch,
