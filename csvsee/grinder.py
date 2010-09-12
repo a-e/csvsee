@@ -71,7 +71,7 @@ from datetime import datetime
 
 def get_test_names(outfile):
     """Return a dict of ``{number: name}`` for each test from the summary
-    portion of the given Grinder ``out_*`` file.
+    portion of the given Grinder ``out*`` file.
     """
     tests = {}
     for line in open(outfile, 'r'):
@@ -83,10 +83,14 @@ def get_test_names(outfile):
 
 
 class NoTestNames (Exception):
+    """Failure to find any test names in a Grinder ``out*`` file.
+    """
     pass
 
 
 class Bin:
+    """Accumulated statistics for an interval of time.
+    """
     def __init__(self, stat_names):
         """Create a bin for accumulating the given statistics.
 
@@ -116,6 +120,8 @@ class Bin:
 
 
 class Test:
+    """Statistics for a single Test in a Grinder test run.
+    """
     # Statistics to sum
     sum_stats = [
         'Errors',
@@ -170,7 +176,7 @@ class Test:
 
     def stat_at_time(self, stat, timestamp):
         """Return a statistic at the given timestamp (either sum or average).
-        Returns 0 if there is no data at the given time.
+        Return ``0`` if there is no data at the given time.
         """
         if timestamp not in self.bins:
             return 0
@@ -191,6 +197,8 @@ class Test:
 
 
 class Report:
+    """A report of statistics for a Grinder test run.
+    """
     def __init__(self, resolution, grinder_outfile, *grinder_datafiles):
         self.resolution = resolution
         self.outfile = grinder_outfile
@@ -217,7 +225,7 @@ class Report:
 
 
     def add(self, row):
-        """Add a row from a data_* file to the stats.
+        """Add a row from a ``data*`` file to the stats.
         """
         test_num = int(row['Test'])
         # Get the Test for this test number
@@ -245,7 +253,7 @@ class Report:
 
 
     def write_csv(self, stat, filename):
-        """Write the given statistic for all tests to the given filename.
+        """Write the given statistic for all tests to ``filename``.
         """
         # Open the CSV file for writing
         csv_writer = csv.writer(open(filename, 'w'))
@@ -284,7 +292,7 @@ class Report:
 
 
 def grinder_files(include_dir):
-    """Return a list of full pathnames to all ``out_*`` and ``data_*`` files
+    """Return a list of full pathnames to all ``out*`` and ``data*`` files
     found in descendants of ``include_dir``.
     """
     if not os.path.exists(include_dir):
