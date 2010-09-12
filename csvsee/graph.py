@@ -5,10 +5,9 @@
 
 import sys
 import csv
-import re
 from datetime import datetime, timedelta
 
-from csvsee import utils
+from csvsee import utils, dates
 
 
 def runtime_error(message):
@@ -138,7 +137,7 @@ class Graph (object):
         row = reader.next()
         infile.close()
         # Return the guessed format
-        return utils.guess_date_format(row[date_column])
+        return dates.guess_date_format(row[date_column])
 
 
     def generate(self):
@@ -151,8 +150,8 @@ class Graph (object):
 
         # Attempt to match column names
         try:
-            x_column, y_columns = utils.match_columns(
-                reader.fieldnames, self['x'], self['y'])
+            x_column, y_columns = utils.matching_xy_fields(
+                self['x'], self['y'], reader.fieldnames)
         except utils.NoMatch as err:
             runtime_error(err)
 

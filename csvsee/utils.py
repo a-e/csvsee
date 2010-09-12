@@ -4,7 +4,8 @@
 """
 
 import csv
-from datetime import datetime
+import re
+from datetime import datetime, timedelta
 
 from csvsee import dates
 
@@ -33,6 +34,13 @@ def float_or_0(value):
         return float(value)
     except ValueError:
         return 0
+
+
+def column_names(csv_file):
+    """Return a list of column names in the given .csv file.
+    """
+    reader = csv.DictReader(open(csv_file, 'r'))
+    return reader.fieldnames
 
 
 def strip_prefix(strings):
@@ -64,27 +72,18 @@ def strip_prefix(strings):
     return (prefix, stripped)
 
 
-def column_names(csv_file):
-    """Return a list of column names in the given .csv file.
-    """
-    reader = csv.DictReader(open(csv_file, 'r'))
-    return reader.fieldnames
-
-
-def grep_files(filenames, matches,
-               dateformat='guess',
-               resolution=60):
+def grep_files(filenames, matches, dateformat='guess', resolution=60):
     """Search all the given files for matching text, and return a list of
     ``(timestamp, counts)`` for each match, where ``timestamp`` is a
     ``datetime``, and ``counts`` is a dictionary of ``{match: count}``,
-    counting the number of times each match was found during that interval.
+    counting the number of times each match was found during intervals of
+    ``resolution`` seconds.
     """
     # Counts of each match, used as a template for each row
     row_temp = [(match, 0) for match in matches]
     rows = {}
     # Read each line of each file
     for filename in filenames:
-        print("Reading '%s' ..." % filename)
         # Guess date format?
         if not dateformat or dateformat == 'guess':
             dateformat = dates.guess_file_date_format(filename)
@@ -166,44 +165,56 @@ def top_by_peak(count, y_columns, y_values, drop=0):
     return top_by(max, count, y_columns, y_values, drop)
 
 
-def match_columns(fieldnames, x_expr, y_exprs):
-    """Match `x_expr` and `y_exprs` to all available column names in
-    `fieldnames`. Return the matched `x_column` and `y_columns`. If no matches
-    are found for any expression, raise a `NoMatch` exception.
+def matching_fields(expr, fields):
+    """Return all ``fields`` that match a regular expression ``expr``,
+    or raise a `NoMatch` exception if no matches are found.
+
+    Examples::
+
+        >>> matching_fields('a.*', ['apple', 'banana', 'avocado'])
+        ['apple', 'avocado']
+
+    """
+    # Do backslash-escape of expressions
+    expr = expr.encode('unicode_escape')
+    # Find matching fields
+    matches = [field for field in fields if re.match(expr, field)]
+    # Return matches or raise a NoMatch exception
+    if matches:
+        return matches
+    else:
+        raise NoMatch("No matching column found for '%s'" % expr)
+
+
+def matching_xy_fields(x_expr, y_exprs, fieldnames):
+    """Match ``x_expr`` and ``y_exprs`` to all available column names in
+    ``fieldnames``. Return the matched ``x_column`` and ``y_columns``. If no If
+    no matches are found for ``x_expr``, just use the first column name. are
+    found for any expression in ``y_exprs``, raise a `NoMatch` exception.
     """
     # Make a copy of fieldnames
     fieldnames = [field for field in fieldnames]
 
-    def _matches(expr, fields):
-        """Return a list of matching column names for `expr`,
-        or raise a `NoMatch` exception if there were none.
-        """
-        # Do backslash-escape of expressions
-        expr = expr.encode('unicode_escape')
-        columns = [column for column in fields
-                   if re.match(expr, column)]
-        if columns:
-            print("Expression: '%s' matched these columns:" % expr)
-            print('\n'.join(columns))
-            return columns
-        else:
-            raise NoMatch("No matching column found for '%s'" % expr)
-
     # If x_expr is provided, match on that.
     if x_expr:
-        x_column = _matches(x_expr, fieldnames)[0]
+        x_column = matching_fields(x_expr, fieldnames)[0]
     # Otherwise, just take the first field.
     else:
         x_column = fieldnames[0]
+
+    print("X-expression: '%s' matched column '%s'" % (x_expr, x_column))
 
     # In any case, remove the x column from fieldnames so it
     # won't be matched by any y-expression.
     fieldnames.remove(x_column)
 
     # Get all matching Y columns
-    y_columns = sum([_matches(y_expr, fieldnames)
-                     for y_expr in y_exprs],
-                    [])
+    y_columns = []
+    for y_expr in y_exprs:
+        matches = matching_fields(y_expr, fieldnames)
+        y_columns.extend(matches)
+        print("Y-expression: '%s' matched these columns:" % y_expr)
+        print('\n'.join(matches))
 
     return (x_column, y_columns)
 
@@ -225,7 +236,7 @@ def read_csv_values(reader, x_column, y_columns, date_format='',
                 timedelta(hours=gmt_offset)
         # Otherwise, assume it's a floating-point numeric value
         else:
-            x_value = utils.float_or_0(x_value)
+            x_value = float_or_0(x_value)
 
         x_values.append(x_value)
 
@@ -233,7 +244,7 @@ def read_csv_values(reader, x_column, y_columns, date_format='',
         for y_col in y_columns:
             if y_col not in y_values:
                 y_values[y_col] = []
-            y_values[y_col].append(utils.float_or_0(row[y_col]))
+            y_values[y_col].append(float_or_0(row[y_col]))
 
     # Adjust datestamps to start at 0:00?
     if date_format and zero_time:
