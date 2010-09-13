@@ -45,16 +45,17 @@ Installation
 There are a few ways to install CSVSee. If you want to install an official release, first
 download one from the `downloads page`_, extract it, then run::
 
-    python setup.py install
+    sudo python setup.py install
+
+Alternatively, you can install with pip_ like so::
+
+    sudo pip install .
 
 If you want a copy of the latest development version, branch it using Bazaar_::
 
     bzr branch lp:csvsee
 
-then install as before using ``setup.py``. Finally, you could use pip_ to download
-and install the development version::
-
-    pip install -e bzr+http://bazaar.launchpad.net/~wapcaplet88/csvsee/trunk#egg=csvsee
+then install as before using ``setup.py`` or ``pip``.
 
 Python_ is required. The ``graph`` command also depends on matplotlib_ and
 NumPy_.
