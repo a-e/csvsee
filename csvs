@@ -10,6 +10,7 @@ Command may be::
 
     graph
     grep
+    grinder
 
 Run ``csvs [command]`` with no further arguments to get help.
 """
