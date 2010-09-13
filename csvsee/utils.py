@@ -231,11 +231,13 @@ def read_csv_values(reader, x_column, y_columns, date_format='',
         x_value = row[x_column]
 
         # If X is supposed to be a date, try to convert it
-        if date_format:
+        try:
+            # FIXME: This could do weird things if the x-values
+            # are sometimes parseable as dates, and sometimes not
             x_value = datetime.strptime(x_value, date_format) + \
                 timedelta(hours=gmt_offset)
         # Otherwise, assume it's a floating-point numeric value
-        else:
+        except ValueError:
             x_value = float_or_0(x_value)
 
         x_values.append(x_value)
