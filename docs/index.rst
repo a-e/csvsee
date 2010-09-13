@@ -42,16 +42,23 @@ This software is open source, under the terms of the `simplified BSD license`_.
 
 Installation
 ------------
-There are a few ways to install CSVSee. If you want to install an official release, first
-download one from the `downloads page`_, extract it, then run::
+If you want to install an official release, first download one from the
+`downloads page`_, and extract it somewhere.
+
+Then, open that directory in a terminal and run::
 
     sudo python setup.py install
 
-Alternatively, you can install with pip_ like so::
+Or use pip_::
 
     sudo pip install .
 
-If you want a copy of the latest development version, branch it using Bazaar_::
+One advantage of using ``pip`` is that you can uninstall later like so::
+
+    sudo pip uninstall CSVSee
+
+If you'd rather use a copy of the latest development version, branch it using
+Bazaar_::
 
     bzr branch lp:csvsee
 
