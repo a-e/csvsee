@@ -2,7 +2,7 @@
 =============
 
 The `csvsee` module provides most of the functionality of CSVSee.
-It consists of several submodules:
+It consists of the following submodules:
 
 .. toctree::
     :maxdepth: 2
