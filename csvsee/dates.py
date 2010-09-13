@@ -73,13 +73,18 @@ def guess_date_format(string):
     """
     # Date formats to try
     # (More specific ones are tried first, more general ones later)
-    # FIXME: This could quickly get out of control, with different ways of
-    # combining dates and times, especially if alternate separators are
-    # allowed ('/' vs. '-'). Find a way to simplify and generalize this.
+    # FIXME: This is quickly getting out of control, with different ways of
+    # combining dates and times, and could get much worse if alternate
+    # separators are allowed ('/' vs. '-'). Find a way to simplify and
+    # generalize this, or leverage an existing module like python-dateutil.
     _formats = (
         '%Y/%m/%d %I:%M:%S %p',
         '%m/%d/%Y %I:%M:%S %p',
         '%m/%d/%y %I:%M:%S %p',
+
+        '%Y/%m/%d %I:%M %p',
+        '%m/%d/%Y %I:%M %p',
+        '%m/%d/%y %I:%M %p',
 
         '%Y/%m/%d %H:%M:%S.%f',
         '%m/%d/%Y %H:%M:%S.%f',
