@@ -3,16 +3,11 @@
 """Unit tests for the `csvsee.dates` module
 """
 
-import os, sys
-# Append to sys.path in case csvsee isn't installed
-sys.path.append(os.path.abspath('..'))
-
+import os
 from datetime import datetime
-
 from csvsee import dates
-from helpers import write_tempfile
-
 from nose.tools import assert_raises
+from . import write_tempfile
 
 
 def test_guess_date_format():

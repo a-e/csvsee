@@ -4,21 +4,15 @@
 """
 
 import os, sys
-# Append to sys.path in case csvsee isn't installed
-sys.path.append(os.path.abspath('..'))
-
-import tempfile
-
 from csvsee import grinder
 from nose.tools import assert_raises
 
-# Directory where test data files are stored
-cwd = os.path.join(os.path.dirname(__file__), 'data')
+from . import data_dir, temp_filename
 
 def test_get_test_names():
     """Test the `get_test_names` function.
     """
-    outfile = os.path.join(cwd, 'out_XP-0.log')
+    outfile = os.path.join(data_dir, 'out_XP-0.log')
     assert grinder.get_test_names(outfile) == {
         1001: 'First test',
         1002: 'Second test',
@@ -53,7 +47,7 @@ def test_empty_Report():
     (that is, a file that's either not a Grinder out* file, or one that
     hasn't finished writing test names to the end).
     """
-    outfile = os.path.join(cwd, 'incomplete.log')
+    outfile = os.path.join(data_dir, 'incomplete.log')
     assert_raises(grinder.NoTestNames,
                   grinder.Report, 60, outfile)
 
@@ -61,9 +55,9 @@ def test_empty_Report():
 def test_Report():
     """Test the `Report` class.
     """
-    outfile = os.path.join(cwd, 'out_XP-0.log')
-    data0 = os.path.join(cwd, 'data_XP-0.log')
-    data1 = os.path.join(cwd, 'data_XP-1.log')
+    outfile = os.path.join(data_dir, 'out_XP-0.log')
+    data0 = os.path.join(data_dir, 'data_XP-0.log')
+    data1 = os.path.join(data_dir, 'data_XP-1.log')
     report = grinder.Report(60, outfile, data0, data1)
 
     assert report.resolution == 60
@@ -114,11 +108,10 @@ def test_Report():
     assert str(test) == '1006: Sixth test'
 
     # Writing report to a .csv file
-    report_csv = tempfile.NamedTemporaryFile(delete=False)
-    report_csv.close()
-    report.write_csv('Test time', report_csv.name)
+    report_csv = temp_filename('csv')
+    report.write_csv('Test time', report_csv)
     # Ensure data matches what's expected
-    lines = [line.rstrip() for line in open(report_csv.name)]
+    lines = [line.rstrip() for line in open(report_csv)]
     assert lines == [
         'GMT,1001: First test,1002: Second test,1003: Third test,1004: Fourth test,1005: Fifth test,1006: Sixth test',
         '08/30/2010 19:10:00.000,1546,318,2557,35882,0,0',
@@ -131,18 +124,18 @@ def test_Report():
         '08/30/2010 19:17:00.000,0,0,0,0,2080,2848',
     ]
     # Remove temporary file
-    os.unlink(report_csv.name)
+    os.unlink(report_csv)
 
 
 def test_grinder_files():
     """Test the `grinder_files` function.
     """
     # Expected out* and data* filenames
-    outfile = os.path.join(cwd, 'out_XP-0.log')
-    data0 = os.path.join(cwd, 'data_XP-0.log')
-    data1 = os.path.join(cwd, 'data_XP-1.log')
+    outfile = os.path.join(data_dir, 'out_XP-0.log')
+    data0 = os.path.join(data_dir, 'data_XP-0.log')
+    data1 = os.path.join(data_dir, 'data_XP-1.log')
 
-    assert grinder.grinder_files(cwd) == [
+    assert grinder.grinder_files(data_dir) == [
         (outfile, [data0, data1])
     ]
 

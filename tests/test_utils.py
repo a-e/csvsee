@@ -3,15 +3,11 @@
 """Unit tests for the `csvsee.utils` module
 """
 
-import os, sys
-# Append to sys.path in case csvsee isn't installed
-sys.path.append(os.path.abspath('..'))
-
+import os
 import csv
 from datetime import datetime
-
 from csvsee import utils
-from helpers import write_tempfile
+from . import write_tempfile
 
 
 def test_grep():

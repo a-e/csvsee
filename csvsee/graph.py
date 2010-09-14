@@ -8,54 +8,8 @@ import csv
 from datetime import datetime, timedelta
 
 from csvsee import utils, dates
-
-
-def runtime_error(message):
-    """Print an error message, then exit.
-    """
-    print('*** Error: %s' % message)
-    sys.exit(1)
-
-
-def date_locator_formatter(min_date, max_date):
-    """Determine suitable locator and format to use for dates between
-    ``min_date`` and ``max_date``, inclusive. Returns ``(locator, formatter)``
-    where ``locator`` is an `RRuleLocator`, and ``formatter`` is a
-    `DateFormatter`.
-    """
-    from matplotlib import dates
-
-    date_range = max_date - min_date
-    # Use HH:MM format by default
-    date_format = '%H:%M'
-
-    # For more than 2 days, label each day
-    if date_range > timedelta(days=2):
-        locator = dates.DayLocator(interval=1)
-        date_format = '%b %d'
-
-    # For more than 24 hours, label every 6 hours
-    elif date_range > timedelta(hours=24):
-        locator = dates.HourLocator(interval=6)
-
-    # For more than 2 hours, label every hour
-    elif date_range > timedelta(hours=2):
-        locator = dates.HourLocator(interval=1)
-
-    # For more than 30 minutes, label 10-minute increments
-    elif date_range > timedelta(minutes=30):
-        locator = dates.MinuteLocator(interval=10)
-
-    # For more than 10 minutes, label every 5 minutes
-    elif date_range > timedelta(minutes=10):
-        locator = dates.MinuteLocator(interval=5)
-
-    # For 10 minutes or less, label every minute
-    else:
-        locator = dates.MinuteLocator()
-
-    formatter = dates.DateFormatter(date_format)
-    return (locator, formatter)
+import pylab
+import matplotlib as mpl
 
 
 class Graph (object):
@@ -143,17 +97,13 @@ class Graph (object):
     def generate(self):
         """Generate the graph.
         """
-        import pylab
 
         print("Reading '%s'" % self.csv_file)
         reader = csv.DictReader(open(self.csv_file, 'r'))
 
         # Attempt to match column names
-        try:
-            x_column, y_columns = utils.matching_xy_fields(
-                self['x'], self['y'], reader.fieldnames)
-        except utils.NoMatch as err:
-            runtime_error(err)
+        x_column, y_columns = utils.matching_xy_fields(
+            self['x'], self['y'], reader.fieldnames)
 
         # Do we need to guess what format the date is in?
         if self['dateformat'] == 'guess':
@@ -225,7 +175,9 @@ class Graph (object):
         """Add date labels to the graph.
         """
         self.axes.set_xlim(min_date, max_date)
-        locator, formatter = date_locator_formatter(min_date, max_date)
+        locator = mpl.dates.AutoDateLocator()
+        locator.set_axis(self.axes.xaxis)
+        formatter = mpl.dates.AutoDateFormatter(locator)
         self.axes.xaxis.set_major_locator(locator)
         self.axes.xaxis.set_major_formatter(formatter)
 
@@ -233,13 +185,12 @@ class Graph (object):
     def save(self, filename):
         """Save the graph to ``filename``. The format is determined by the
         extension of ``filename``; if it's not ``png``, ``svg``, or ``pdf``,
-        then ``png`` format is used.
+        then a `ValueError` is raised.
         """
         ext = filename[-3:]
         if ext not in ('png', 'svg', 'pdf'):
-            print("File extension '%s' unknown. Assuming 'png'." % ext)
-            ext = 'png'
-            filename += '.png'
+            raise ValueError("File extension must be 'png', 'svg', or 'pdf'."
+                             " Got '%s' instead." % ext)
 
         # Ensure that title and legend don't get cropped out
         extra = [
@@ -257,7 +208,6 @@ class Graph (object):
     def show(self):
         """Display the graph in a GUI window.
         """
-        import pylab
         pylab.show()
 
 
