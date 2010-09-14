@@ -243,8 +243,6 @@ class Report:
         """Return the ``(start, end)`` timestamps for this report, based
         on the timestamps of all tests within it.
         """
-        if not self.tests:
-            return (0, 0)
         # Get all (start, end) ranges from the tests
         ranges = [test.timestamp_range() for test in self.tests.values()]
         # Using list() here to future-proof

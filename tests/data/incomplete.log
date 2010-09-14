@@ -1,0 +1,8 @@
+8/31/10 3:10:27 AM (process XP-0): The Grinder version 3.4
+8/31/10 3:10:27 AM (process XP-0): Java(TM) SE Runtime Environment 1.6.0_17-b04: Java HotSpot(TM) Client VM (14.3-b01, mixed mode) on Windows XP x86 5.1
+8/31/10 3:10:27 AM (process XP-0): time zone is CST (+0800)
+8/31/10 3:10:27 AM (process XP-0): worker process 0 of agent number 0
+8/31/10 3:10:27 AM (process XP-0): instrumentation agents: traditional Jython instrumenter; byte code transforming instrumenter for Java
+8/31/10 3:10:27 AM (process XP-0): executing "grinder_webtest.py" using Jython 2.2.1
+8/31/10 3:10:28 AM (process XP-0): registered plug-in net.grinder.plugin.http.HTTPPlugin
+8/31/10 3:10:30 AM (process XP-0): starting threads

@@ -174,6 +174,10 @@ def matching_fields(expr, fields):
         >>> matching_fields('a.*', ['apple', 'banana', 'avocado'])
         ['apple', 'avocado']
 
+        >>> matching_fields('a.*', ['peach', 'grape', 'kiwi'])
+        Traceback (most recent call last):
+        NoMatch: No matching column found for 'a.*'
+
     """
     # Do backslash-escape of expressions
     expr = expr.encode('unicode_escape')
@@ -186,11 +190,30 @@ def matching_fields(expr, fields):
         raise NoMatch("No matching column found for '%s'" % expr)
 
 
-def matching_xy_fields(x_expr, y_exprs, fieldnames):
+def matching_xy_fields(x_expr, y_exprs, fieldnames, verbose=False):
     """Match ``x_expr`` and ``y_exprs`` to all available column names in
-    ``fieldnames``. Return the matched ``x_column`` and ``y_columns``. If no If
-    no matches are found for ``x_expr``, just use the first column name. are
-    found for any expression in ``y_exprs``, raise a `NoMatch` exception.
+    ``fieldnames``, and return the matched ``x_column`` and ``y_columns``.
+
+    Example::
+
+        >>> matching_xy_fields('x.*', ['y[12]', 'y[ab]'],
+        ...     ['xxx', 'y1', 'y2', 'y3', 'ya', 'yb', 'yc'])
+        ('xxx', ['y1', 'y2', 'ya', 'yb'])
+
+    If ``x_expr`` is empty, the first column name is used::
+
+        >>> matching_xy_fields('', ['y[12]', 'y[ab]'],
+        ...     ['xxx', 'y1', 'y2', 'y3', 'ya', 'yb', 'yc'])
+        ('xxx', ['y1', 'y2', 'ya', 'yb'])
+
+    If no match is found for any expression in ``y_exprs``, a `NoMatch`
+    exception is raised::
+
+        >>> matching_xy_fields('', ['y[12]', 'y[jk]'],
+        ...     ['xxx', 'y1', 'y2', 'y3', 'ya', 'yb', 'yc'])
+        Traceback (most recent call last):
+        NoMatch: No matching column found for 'y[jk]'
+
     """
     # Make a copy of fieldnames
     fieldnames = [field for field in fieldnames]
@@ -202,7 +225,7 @@ def matching_xy_fields(x_expr, y_exprs, fieldnames):
     else:
         x_column = fieldnames[0]
 
-    print("X-expression: '%s' matched column '%s'" % (x_expr, x_column))
+    #print("X-expression: '%s' matched column '%s'" % (x_expr, x_column))
 
     # In any case, remove the x column from fieldnames so it
     # won't be matched by any y-expression.
@@ -213,8 +236,8 @@ def matching_xy_fields(x_expr, y_exprs, fieldnames):
     for y_expr in y_exprs:
         matches = matching_fields(y_expr, fieldnames)
         y_columns.extend(matches)
-        print("Y-expression: '%s' matched these columns:" % y_expr)
-        print('\n'.join(matches))
+        #print("Y-expression: '%s' matched these columns:" % y_expr)
+        #print('\n'.join(matches))
 
     return (x_column, y_columns)
 

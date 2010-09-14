@@ -1,0 +1,27 @@
+8/31/10 3:10:27 AM (process XP-0): The Grinder version 3.4
+8/31/10 3:10:27 AM (process XP-0): Java(TM) SE Runtime Environment 1.6.0_17-b04: Java HotSpot(TM) Client VM (14.3-b01, mixed mode) on Windows XP x86 5.1
+8/31/10 3:10:27 AM (process XP-0): time zone is CST (+0800)
+8/31/10 3:10:27 AM (process XP-0): worker process 0 of agent number 0
+8/31/10 3:10:27 AM (process XP-0): instrumentation agents: traditional Jython instrumenter; byte code transforming instrumenter for Java
+8/31/10 3:10:27 AM (process XP-0): executing "grinder_webtest.py" using Jython 2.2.1
+8/31/10 3:10:28 AM (process XP-0): registered plug-in net.grinder.plugin.http.HTTPPlugin
+8/31/10 3:10:30 AM (process XP-0): starting threads
+8/31/10 4:48:11 AM (process XP-0): Final statistics for this process:
+             Tests        Errors       Mean Test    Test Time    TPS          Mean         Response     Response     Mean time to Mean time to Mean time to
+                                       Time (ms)    Standard                  response     bytes per    errors       resolve host establish    first byte
+                                                    Deviation                 length       second                                 connection
+                                                    (ms)
+
+Test 1001    12           0            1546.17      6.87         0.00         8985.00      18.60        0            128319543038 128319543069 1537.33       "First test"
+Test 1002    12           0            318.75       3.44         0.00         8985.00      18.60        0            128319543038 128319543069 315.42        "Second test"
+Test 1003    12           0            2557.50      50.81        0.00         537.00       1.11         0            128319543319 128319543350 2250.42       "Third test"
+Test 1004    12           0            35882.75     6324.66      0.00         633567.00    1311.31      0            128319543626 128319543657 11788.58      "Fourth test"
+Test 1005    12           0            1883.00      218.99       0.00         786.00       1.63         0            128319547267 128319547302 1549.50       "Fifth test"
+Test 1006    12           0            2333.83      432.72       0.00         163.00       0.34         0            128319547506 128319547540 2327.25       "Sixth test"
+Totals       72           0            724.56       2338.43      0.03         7975.59      229.20       0            128319801760 128319801792 717.22
+
+  Tests resulting in error only contribute to the Errors column.
+  Statistics for individual tests can be found in the data file, including
+  (possibly incomplete) statistics for erroneous tests. Composite tests
+  are marked with () and not included in the totals.
+8/31/10 4:48:11 AM (process XP-0): finished

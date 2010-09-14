@@ -1,7 +1,6 @@
-#! /usr/bin/env python
 # test_dates.py
 
-"""Unit tests for the csvsee.dates module
+"""Unit tests for the `csvsee.dates` module
 """
 
 import os, sys
@@ -13,11 +12,7 @@ from datetime import datetime
 from csvsee import dates
 from helpers import write_tempfile
 
-
-def test_parse_date():
-    """Test the `dates.parse_date` function.
-    """
-    pass
+from nose.tools import assert_raises
 
 
 def test_guess_date_format():
@@ -50,17 +45,24 @@ def test_guess_file_date_format():
     for data, expected in data_formats:
         # Create a temporary file containing the data
         filename = write_tempfile(data)
-        actual = dates.guess_file_date_format(filename)
-        assert actual == expected
-        # Remove the temp file
-        os.unlink(filename)
+        try:
+            actual = dates.guess_file_date_format(filename)
+        except:
+            assert False
+        else:
+            assert actual == expected
+        finally:
+            # Remove the temp file
+            os.unlink(filename)
 
     # TODO: Guess format in a .csv file
 
 
-def test_date_chop():
-    """Test the `dates.date_chop` function.
-    """
-    pass
+def test_guess_file_date_format_exception():
+    filename = write_tempfile('Data file without a date')
+    assert_raises(dates.CannotParseDate,
+                  dates.guess_file_date_format,
+                  filename)
+    os.unlink(filename)
 
 
