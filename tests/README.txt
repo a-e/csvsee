@@ -1,7 +1,8 @@
-This directory contains unit tests for CSVSee. Each of the ``test_*.py`` files
-is executable; run these to execute the doctests and unit tests for the
-corresponding ``csvsee`` module.
+This directory contains unit tests for CSVSee, written using nose_. Run
+``nosetests`` from the main ``csvsee`` project directory to execute them.
 
 The ``data`` directory contains sample ``.csv`` and ``.log`` files for
 testing purposes.
+
+.. _nose: http://somethingaboutorange.com/mrl/projects/nose/0.11.2/index.html
 
