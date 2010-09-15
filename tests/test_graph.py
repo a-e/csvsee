@@ -29,6 +29,8 @@ class TestGraph:
         g.generate()
         g.save(self.png_file)
         assert os.path.isfile(self.png_file)
+        # Show the graph, for a visual confirmation
+        g.show()
 
 
     def test_graph_peak(self):
@@ -57,14 +59,6 @@ class TestGraph:
         g.generate()
         g.save(self.png_file)
         assert os.path.isfile(self.png_file)
-
-
-    #def test_graph_show(self):
-        #"""Test graph display.
-        #"""
-        #g = graph.Graph(self.csv_file)
-        #g.generate()
-        #g.show()
 
 
     def test_bad_extension(self):
