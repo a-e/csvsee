@@ -7,6 +7,7 @@ command. Currently, two commands are implemented:
 
 * ``csvs graph``: Generate graphs from ``.csv`` files
 * ``csvs grep``: Search in text files and generate a ``.csv`` file
+* ``csvs grinder``: Create ``.csv`` reports based on Grinder_ output file
 
 
 csvs graph

@@ -122,8 +122,8 @@ def test_top_by():
     assert utils.top_by(max, 3, data.keys(), data) == ['e', 'd', 'c']
 
 
-def test_csv_reader_with_timestamps():
-    """Test the `read_csv_values` function with a ``.csv`` file containing
+def test_xy_reader_with_timestamps():
+    """Test the `read_xy_values` function with a ``.csv`` file containing
     timestamps.
     """
     filename = write_tempfile(
@@ -134,7 +134,7 @@ def test_csv_reader_with_timestamps():
 
     # Test parsing with no gmt_offset or zero_time
     reader = csv.DictReader(open(filename))
-    x_values, y_values = utils.read_csv_values(
+    x_values, y_values = utils.read_xy_values(
         reader, 'Eastern Standard Time',
         ['Response Time', 'Response Length'],
         date_format='%Y/%m/%d %H:%M:%S')
@@ -147,9 +147,25 @@ def test_csv_reader_with_timestamps():
         'Response Time': [419.0, 315.0],
     }
 
+    # Test parsing with gmt_offset=6
+    reader = csv.DictReader(open(filename))
+    x_values, y_values = utils.read_xy_values(
+        reader, 'Eastern Standard Time',
+        ['Response Time', 'Response Length'],
+        date_format='%Y/%m/%d %H:%M:%S',
+        gmt_offset=6)
+    assert x_values == [
+        datetime(2010, 5, 19, 19, 45, 50),
+        datetime(2010, 5, 19, 19, 45, 55),
+    ]
+    assert y_values == {
+        'Response Length': [2048.0, 2048.0],
+        'Response Time': [419.0, 315.0],
+    }
+
     # Test parsing zero_time
     reader = csv.DictReader(open(filename))
-    x_values, y_values = utils.read_csv_values(
+    x_values, y_values = utils.read_xy_values(
         reader, 'Eastern Standard Time',
         ['Response Time', 'Response Length'],
         date_format='%Y/%m/%d %H:%M:%S',
@@ -166,8 +182,8 @@ def test_csv_reader_with_timestamps():
     os.unlink(filename)
 
 
-def test_csv_reader_without_timestamps():
-    """Test the `read_csv_values` function with a ``.csv`` file that
+def test_xy_reader_without_timestamps():
+    """Test the `read_xy_values` function with a ``.csv`` file that
     does not contain timestamps, only numeric values.
     """
     filename = write_tempfile(
@@ -179,7 +195,7 @@ def test_csv_reader_without_timestamps():
            4,10,15
         """)
     reader = csv.DictReader(open(filename))
-    x_values, y_values = utils.read_csv_values(
+    x_values, y_values = utils.read_xy_values(
         reader, 'X', ['Y', 'Z'])
     assert x_values == [0.0, 1.0, 2.0, 3.0, 4.0]
     assert y_values == {

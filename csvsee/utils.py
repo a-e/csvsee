@@ -37,7 +37,7 @@ def float_or_0(value):
 
 
 def column_names(csv_file):
-    """Return a list of column names in the given .csv file.
+    """Return a list of column names in the given ``.csv`` file.
     """
     reader = csv.DictReader(open(csv_file, 'r'))
     return reader.fieldnames
@@ -242,10 +242,33 @@ def matching_xy_fields(x_expr, y_exprs, fieldnames, verbose=False):
     return (x_column, y_columns)
 
 
-def read_csv_values(reader, x_column, y_columns, date_format='',
-                    gmt_offset=0, zero_time=False):
-    """Read values from a `csv.DictReader`, and return all values in
-    ``x_column`` and ``y_columns``.
+def read_xy_values(reader, x_column, y_columns,
+                   date_format='', gmt_offset=0, zero_time=False):
+    """Read values from a `csv.DictReader`, and return ``(x_values,
+    y_values)``. where ``x_values`` is a list of values found in ``x_column``,
+    and ``y_values`` is a dictionary of ``{y_column: [values]}`` for each
+    column in ``y_columns``.
+
+    Arguments:
+
+        x_column
+            Name of the column you want to use as the X axis.
+
+        y_columns
+            Names of columns you want to plot on the Y axis.
+
+        date_format
+            If given, treat values in ``x_column`` as timestamps
+            with the given format string.
+
+        gmt_offset
+            Add this many hours to every timestamp.
+            Only useful with ``date_format``.
+
+        zero_time
+            If ``True``, adjust timestamps so the earliest one starts at
+            ``00:00`` (midnight). Only useful with ``date_format``.
+
     """
     x_values = []
     y_values = {}

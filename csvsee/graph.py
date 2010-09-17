@@ -110,7 +110,7 @@ class Graph (object):
             self['dateformat'] = self.guess_date_format(x_column)
 
         # Read each row in the .csv file and populate x and y value lists
-        x_values, y_values = utils.read_csv_values(reader,
+        x_values, y_values = utils.read_xy_values(reader,
             x_column, y_columns, self['dateformat'], self['gmtoffset'], self['zerotime'])
 
         # Create the figure and plot

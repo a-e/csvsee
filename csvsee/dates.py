@@ -67,7 +67,7 @@ def guess_date_format(string):
         >>> guess_date_format('01/28/2010 13:25:49.123')
         '%m/%d/%Y %H:%M:%S.%f'
 
-    Some date strings are ambiguous; for example, '01/12/10' could mean "2010
+    Some date strings are ambiguous; for example, ``01/12/10`` could mean "2010
     January 12", "2001 December 10", or even "2010 December 1". In these cases,
     the format guessed might be wrong.
     """
@@ -111,7 +111,7 @@ def guess_date_format(string):
 
 
 def guess_file_date_format(filename):
-    """Open the given file and look for anything that looks like a date/time
+    """Open the given file and use `guess_date_format` to look for a date/time
     at the beginning of each line. Return the format string for the first
     one that's found, or ``None`` if none are found.
     """
