@@ -7,7 +7,7 @@
 from distutils.core import setup
 
 setup(name='CSVSee',
-      version='0.1',
+      version='0.2',
       description='Visualization and manipulation of CSV files.',
       author='Eric Pierce',
       author_email='wapcaplet88@gmail.com',
