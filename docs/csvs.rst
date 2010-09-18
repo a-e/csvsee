@@ -82,6 +82,7 @@ Run ``csvs grep`` without arguments to see full usage notes.
 
 csvs grinder
 ------------
+.. versionadded:: 0.2
 
 The ``grinder`` command generates ``.csv`` files from Grinder_ logs. You must
 provide the name of a ``out*`` file, and one or more ``data*`` files generated

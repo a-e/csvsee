@@ -15,6 +15,8 @@ It consists of the following submodules:
 
 Testing
 -------
+.. versionadded:: 0.2
+
 CSVSee's core modules include several doctests_, along with a suite of unit
 tests in the ``tests`` directory that can be run with nose_. If you have the
 coverage_ module installed, nose will generate a report of statement coverage
