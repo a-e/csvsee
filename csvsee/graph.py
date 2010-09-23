@@ -91,7 +91,7 @@ class Graph (object):
         row = reader.next()
         infile.close()
         # Return the guessed format
-        return dates.guess_date_format(row[date_column])
+        return dates.guess_format(row[date_column])
 
 
     def generate(self):

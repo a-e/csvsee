@@ -10,8 +10,8 @@ from nose.tools import assert_raises
 from . import write_tempfile
 
 
-def test_guess_date_format():
-    """Test the `dates.guess_date_format` function.
+def test_guess_format():
+    """Test the `dates.guess_format` function.
     """
     date_formats = [
         ('2010/01/28 12:34:56 PM',      '%Y/%m/%d %I:%M:%S %p'),
@@ -21,7 +21,7 @@ def test_guess_date_format():
         #('2010-01-28 12:34:56 PM', '%Y-%m-%d %I:%M:%S %p'),
     ]
     for date, format in date_formats:
-        assert dates.guess_date_format(date) == format
+        assert dates.guess_format(date) == format
 
 
 def test_guess_file_date_format():
@@ -55,7 +55,7 @@ def test_guess_file_date_format():
 
 def test_guess_file_date_format_exception():
     filename = write_tempfile('Data file without a date')
-    assert_raises(dates.CannotParseDate,
+    assert_raises(dates.CannotParse,
                   dates.guess_file_date_format,
                   filename)
     os.unlink(filename)

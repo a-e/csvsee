@@ -3,35 +3,41 @@
 """Date/time parsing and manipulation functions
 """
 
-from datetime import datetime
-import time
+# Grinder: 8/30/10 1:13:17 PM
+# Maillong: Sep 21 18:10:38
+# Perfmon: 12/01/2009 12:59:28.114
+# csvs grep: 08/30/2010 19:10:00.000
 
-class CannotParseDate (Exception):
-    """Failure to parse a string as a date.
+import datetime as dt
+import time
+import re
+
+class CannotParse (Exception):
+    """Failure to parse a date or time.
     """
     pass
 
 
-def parse_date(string, format):
+def parse(string, format):
     """Attempt to parse the given string as a date in the given format.
     This is similar to `datetime.strptime`, but this can handle date strings
     with trailing characters. If it still fails to parse, raise a
-    `CannotParseDate` exception.
+    `CannotParse` exception.
 
     Examples::
 
-        >>> parse_date('2010/08/28', '%Y/%m/%d')
+        >>> parse('2010/08/28', '%Y/%m/%d')
         datetime.datetime(2010, 8, 28, 0, 0)
 
-        >>> parse_date('2010/08/28 extra stuff', '%Y/%m/%d')
+        >>> parse('2010/08/28 extra stuff', '%Y/%m/%d')
         datetime.datetime(2010, 8, 28, 0, 0)
 
-        >>> parse_date('2010/08/28', '%m/%d/%y')
+        >>> parse('2010/08/28', '%m/%d/%y')
         Traceback (most recent call last):
-        CannotParseDate: time data '2010/08/28' does not match format '%m/%d/%y'
+        CannotParse: time data '2010/08/28' does not match format '%m/%d/%y'
     """
     try:
-        result = datetime.strptime(string, format)
+        result = dt.datetime.strptime(string, format)
     except ValueError, err:
         # A bit of hack here, since strptime doesn't distinguish between
         # total failure to parse a date, and success with trailing
@@ -43,93 +49,139 @@ def parse_date(string, format):
             # Try again with the unconverted data removed
             junk = message[len(data_remains):]
             clean = string[:-1*len(junk)]
-            result = datetime.strptime(clean, format)
+            result = dt.datetime.strptime(clean, format)
         else:
-            raise CannotParseDate(message)
+            raise CannotParse(message)
 
     # If we got here, we got a result
     return result
 
 
-def guess_date_format(string):
-    """Try to guess what date/time format a given ``string`` is in. If format
-    can be inferred, return the format string. Otherwise, raise a
-    `CannotParseDate` exception.
+# Some people, when confronted with a problem, think
+#   "I know, I'll use regular expressions."
+# Now they have two problems.
+#                               -- Jamie Zawinski
+
+# Formatting directives and corresponding regular expression
+_regexps = {
+    'b': r'(?P<b>jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)',
+    'm': r'(?P<m>\d\d?)',
+    'd': r'(?P<d>\d\d?)',
+    'Y': r'(?P<Y>\d\d\d\d)',
+    'y': r'(?P<y>\d\d)',
+    'I': r'(?P<H>0?[1-9]|1[012])',
+    'H': r'(?P<H>[01]?[0-9]|2[0-3])',
+    'M': r'(?P<M>[0-5]\d)',
+    'S': r'(?P<S>[0-5]\d)',
+    'f': r'(?P<f>\d+)',
+    'p': r'(?P<p>am|pm)',
+}
+
+# Support date formats
+_date_formats = [
+    'b d Y',
+    'b d',
+    'Y/m/d',
+    'Y-m-d',
+    'm/d/Y',
+    'm-d-Y',
+    'm/d/y',
+    'm-d-y',
+    'y/m/d',
+    'y-m-d',
+]
+
+# Supported time formats
+_time_formats = [
+    'I:M:S.f p',
+    'H:M:S.f',
+    'I:M:S p',
+    'H:M:S',
+    'I:M p',
+    'H:M',
+]
+
+# All date/time formats combined
+_date_time_formats = [
+    df + ' ' + tf
+    for df in _date_formats
+        for tf in _time_formats
+]
+
+def format_regexp(simple_format):
+    r"""Given a simplified date or time format string, return ``(format,
+    regexp)``, where ``format`` is a `strptime`-compatible format string, and
+    ``regexp`` is a regular expression that matches dates or times in that
+    format.
+
+    The ``simple_format`` string supports a subset of `strptime` formatting
+    directives, with the leading ``%`` characters removed.
 
     Examples::
 
-        >>> guess_date_format('2010/01/28 13:25:49')
+        >>> format_regexp('Y/m/d')
+        ('%Y/%m/%d', '(?P<Y>\\d\\d\\d\\d)/(?P<m>\\d\\d?)/(?P<d>\\d\\d?)')
+
+        >>> format_regexp('H:M:S')
+        ('%H:%M:%S', '(?P<H>[01]?[0-9]|2[0-3]):(?P<M>[0-5]\\d):(?P<S>[0-5]\\d)')
+
+    """
+    format, regexp = ('', '')
+    for char in simple_format:
+        if char in _regexps:
+            format += '%' + char
+            regexp += _regexps[char]
+        else:
+            format += char
+            regexp += char
+    return (format, regexp)
+
+
+def guess_format(string):
+    """Try to guess the date/time format of ``string``, or raise a
+    `CannotParse` exception.
+
+    Examples::
+
+        >>> guess_format('2010/01/28 13:25:49')
         '%Y/%m/%d %H:%M:%S'
 
-        >>> guess_date_format('01/28/10 1:25:49 PM')
+        >>> guess_format('01/28/10 1:25:49 PM')
         '%m/%d/%y %I:%M:%S %p'
 
-        >>> guess_date_format('01/28/2010 13:25:49.123')
+        >>> guess_format('01/28/2010 13:25:49.123')
         '%m/%d/%Y %H:%M:%S.%f'
 
-    Some date strings are ambiguous; for example, ``01/12/10`` could mean "2010
-    January 12", "2001 December 10", or even "2010 December 1". In these cases,
-    the format guessed might be wrong.
     """
-    # Date formats to try
-    # (More specific ones are tried first, more general ones later)
-    # FIXME: This is quickly getting out of control, with different ways of
-    # combining dates and times, and could get much worse if alternate
-    # separators are allowed ('/' vs. '-'). Find a way to simplify and
-    # generalize this, or leverage an existing module like python-dateutil.
-    _formats = (
-        '%Y/%m/%d %I:%M:%S %p',
-        '%m/%d/%Y %I:%M:%S %p',
-        '%m/%d/%y %I:%M:%S %p',
-
-        '%Y/%m/%d %I:%M %p',
-        '%m/%d/%Y %I:%M %p',
-        '%m/%d/%y %I:%M %p',
-
-        '%Y/%m/%d %H:%M:%S.%f',
-        '%m/%d/%Y %H:%M:%S.%f',
-        '%m/%d/%y %H:%M:%S.%f',
-
-        '%Y/%m/%d %H:%M:%S',
-        '%m/%d/%Y %H:%M:%S',
-        '%m/%d/%y %H:%M:%S',
-
-        '%Y/%m/%d %H:%M',
-        '%m/%d/%Y %H:%M',
-        '%m/%d/%y %H:%M',
-    )
-    # Try each format and return the first one that works
-    for format in _formats:
-        try:
-            temp = parse_date(string, format)
-        except CannotParseDate:
-            pass
-        else:
+    for dt_format in _date_time_formats:
+        format, regexp = format_regexp(dt_format)
+        # If regexp matches the string, use this format
+        if re.search(regexp, string, re.IGNORECASE):
             return format
-
-    raise CannotParseDate("Could not guess date format in: '%s'" % string)
+    # Nothing matched
+    raise CannotParse("Could not guess date/time format in: %s" % string)
 
 
 def guess_file_date_format(filename):
-    """Open the given file and use `guess_date_format` to look for a date/time
-    at the beginning of each line. Return the format string for the first
-    one that's found, or ``None`` if none are found.
+    """Open the given file and use `guess_format` to look for a
+    date/time at the beginning of each line. Return the format string for
+    the first one that's found. Raise `CannotParse` if none is found.
     """
     for line in open(filename):
         try:
-            format = guess_date_format(line)
-        except CannotParseDate:
+            format = guess_format(line)
+        except CannotParse:
             pass
         else:
             return format
 
-    raise CannotParseDate("No date/time strings found in '%s'" % filename)
+    raise CannotParse("No date/time strings found in '%s'" % filename)
 
 
 def date_chop(line, dateformat='%m/%d/%y %I:%M:%S %p', resolution=60):
     """Given a ``line`` of text, get a date/time formatted as ``dateformat``,
     and return a `datetime` object rounded to the nearest ``resolution``
-    seconds. If ``line`` fails to match ``dateformat``, a `CannotParseDate`
+    seconds. If ``line`` fails to match ``dateformat``, a `CannotParse`
     exception is raised.
 
     Examples::
@@ -141,14 +193,14 @@ def date_chop(line, dateformat='%m/%d/%y %I:%M:%S %p', resolution=60):
         datetime.datetime(1976, 5, 19, 12, 0)
 
     """
-    timestamp = parse_date(line, dateformat)
+    timestamp = parse(line, dateformat)
     # Round the timestamp to the given resolution
     # First convert to seconds-since-epoch
     epoch_seconds = int(time.mktime(timestamp.timetuple()))
     # Then do integer division to truncate
     rounded_seconds = (epoch_seconds / resolution) * resolution
     # Convert back to a datetime
-    return datetime.fromtimestamp(rounded_seconds)
+    return dt.datetime.fromtimestamp(rounded_seconds)
 
 
 

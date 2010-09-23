@@ -84,6 +84,7 @@ def grep_files(filenames, matches, dateformat='guess', resolution=60):
     rows = {}
     # Read each line of each file
     for filename in filenames:
+        print("Reading %s" % filename)
         # Guess date format?
         if not dateformat or dateformat == 'guess':
             dateformat = dates.guess_file_date_format(filename)
@@ -99,7 +100,7 @@ def grep_files(filenames, matches, dateformat='guess', resolution=60):
             try:
                 line_timestamp = dates.date_chop(line, dateformat, resolution)
             # No timestamp found, stick with the current one
-            except dates.CannotParseDate:
+            except dates.CannotParse:
                 pass
             # New timestamp found, switch to it
             else:
@@ -110,9 +111,9 @@ def grep_files(filenames, matches, dateformat='guess', resolution=60):
                 rows[timestamp] = dict(row_temp)
 
             # Count the number of each match in this line
-            for match in matches:
-                if match in line:
-                    rows[timestamp][match] += 1
+            for expr in matches:
+                if re.search(expr, line):
+                    rows[timestamp][expr] += 1
 
     # Return a sorted list of (match, {counts}) tuples
     return sorted(rows.iteritems())
