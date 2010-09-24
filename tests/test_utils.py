@@ -37,8 +37,9 @@ def test_grep():
         'Pining',
         'Stunned',
     ]
-    # Using 60-second resolution
-    counts = utils.grep_files(filenames, matches, resolution=60)
+    # Using 60-second resolution and a progress bar
+    counts = utils.grep_files(filenames, matches, resolution=60,
+                              show_progress=True)
     assert counts == [
         (datetime(2010, 8, 30, 13, 57), {'Pushing': 1, 'Pining': 0, 'Stunned': 0}),
         (datetime(2010, 8, 30, 13, 58), {'Pushing': 0, 'Pining': 0, 'Stunned': 2}),
@@ -47,8 +48,9 @@ def test_grep():
         (datetime(2010, 8, 30, 14, 9), {'Pushing': 0, 'Pining': 1, 'Stunned': 0}),
     ]
 
-    # Using 10-minute resolution
-    counts = utils.grep_files(filenames, matches, resolution=600)
+    # Using 10-minute resolution without progress bar
+    counts = utils.grep_files(filenames, matches, resolution=600,
+                              show_progress=False)
     assert counts == [
         (datetime(2010, 8, 30, 13, 50), {'Pushing': 1, 'Pining': 0, 'Stunned': 2}),
         (datetime(2010, 8, 30, 14, 0), {'Pushing': 1, 'Pining': 2, 'Stunned': 0}),

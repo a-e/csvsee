@@ -5,6 +5,7 @@
 
 import csv
 import re
+import sys
 from datetime import datetime, timedelta
 
 from csvsee import dates
@@ -72,7 +73,8 @@ def strip_prefix(strings):
     return (prefix, stripped)
 
 
-def grep_files(filenames, matches, dateformat='guess', resolution=60):
+def grep_files(filenames, matches, dateformat='guess', resolution=60,
+               show_progress=True):
     """Search all the given files for matching text, and return a list of
     ``(timestamp, counts)`` for each match, where ``timestamp`` is a
     ``datetime``, and ``counts`` is a dictionary of ``{match: count}``,
@@ -82,16 +84,34 @@ def grep_files(filenames, matches, dateformat='guess', resolution=60):
     # Counts of each match, used as a template for each row
     row_temp = [(match, 0) for match in matches]
     rows = {}
+
     # Read each line of each file
     for filename in filenames:
-        print("Reading %s" % filename)
+        # Show progress bar?
+        if show_progress:
+            num_lines = line_count(filename)
+            progress = ProgressBar(num_lines, prefix=filename, units='lines')
+        # No progress bar, just print the filename being read
+        else:
+            print("Reading %s" % filename)
+
         # Guess date format?
         if not dateformat or dateformat == 'guess':
             dateformat = dates.guess_file_date_format(filename)
 
         # HACK: Fake timestamp in case no real timestamps are ever found
         timestamp = datetime(1970, 1, 1)
+        # What line number are we on?
+        line_num = 0
         for line in open(filename, 'r'):
+            line_num += 1
+            # Update progress bar every 1000 lines
+            if show_progress:
+                if line_num % 1000 == 0 or line_num == num_lines:
+                    progress.update(line_num)
+                    sys.stdout.write('\r' + str(progress))
+                    sys.stdout.flush()
+
             # If line is empty, skip it
             if line.strip() == '':
                 continue
@@ -114,6 +134,10 @@ def grep_files(filenames, matches, dateformat='guess', resolution=60):
             for expr in matches:
                 if re.search(expr, line):
                     rows[timestamp][expr] += 1
+
+        # If using progress bar, print a newline
+        if show_progress:
+            sys.stdout.write('\n')
 
     # Return a sorted list of (match, {counts}) tuples
     return sorted(rows.iteritems())
@@ -303,4 +327,51 @@ def read_xy_values(reader, x_column, y_columns,
 
     return (x_values, y_values)
 
+
+def line_count(filename):
+    """Return the total number of lines in the given file.
+    """
+    # Not terribly efficient but easy and good enough for now
+    return sum(1 for line in open(filename))
+
+
+class ProgressBar:
+    """An ASCII command-line progress bar with percentage.
+
+    Adapted from Corey Goldberg's version:
+    http://code.google.com/p/corey-projects/source/browse/trunk/python2/progress_bar.py
+    """
+    def __init__(self, end, prefix='', fill='=', units='secs', width=40):
+        """Create a progress bar with the given attributes.
+        """
+        self.end = end
+        self.prog_bar = '[]'
+        self.prefix = prefix
+        self.fill = fill
+        self.units = units
+        self.width = width
+        self._update_amount(0)
+
+    def _update_amount(self, new_amount):
+        """Update the progress bar with the percentage of completion.
+        """
+        percent_done = int(round((new_amount / 100.0) * 100.0))
+        all_full = self.width - 2
+        num_hashes = int(round((percent_done / 100.0) * all_full))
+        self.prog_bar = '[' + self.fill * num_hashes + ' ' * (all_full - num_hashes) + ']'
+        pct_place = (len(self.prog_bar) / 2) - len(str(percent_done))
+        pct_string = '%i%%' % percent_done
+        self.prog_bar = self.prog_bar[0:pct_place] + \
+            (pct_string + self.prog_bar[pct_place + len(pct_string):])
+
+    def update(self, current):
+        """Set the current progress.
+        """
+        self._update_amount((current / float(self.end)) * 100.0)
+        self.prog_bar += '  %d/%d %s' % (current, self.end, self.units)
+
+    def __str__(self):
+        """Return the progress bar as a string.
+        """
+        return str(self.prefix + ' ' + self.prog_bar)
 
