@@ -137,6 +137,16 @@ def format_regexp(simple_format):
     return (format, regexp)
 
 
+# (format, regexp) for each supported format
+_format_regexps = []
+for dt_format in _date_time_formats:
+    format, regexp = format_regexp(dt_format)
+    # Compile the regexp
+    _format_regexps.append(
+        (format, re.compile(regexp, re.IGNORECASE))
+    )
+
+
 def guess_format(string):
     """Try to guess the date/time format of ``string``, or raise a
     `CannotParse` exception.
@@ -152,11 +162,15 @@ def guess_format(string):
         >>> guess_format('01/28/2010 13:25:49.123')
         '%m/%d/%Y %H:%M:%S.%f'
 
+        >>> guess_format('Aug 15 2009 15:24')
+        '%b %d %Y %H:%M'
+
+        >>> guess_format('3-14-15 9:26:53.589')
+        '%m-%d-%y %H:%M:%S.%f'
+
     """
-    for dt_format in _date_time_formats:
-        format, regexp = format_regexp(dt_format)
-        # If regexp matches the string, use this format
-        if re.search(regexp, string, re.IGNORECASE):
+    for format, regexp in _format_regexps:
+        if regexp.search(string):
             return format
     # Nothing matched
     raise CannotParse("Could not guess date/time format in: %s" % string)
