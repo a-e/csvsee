@@ -27,9 +27,10 @@ To install nose_ and coverage_::
     pip install nose
     pip install coverage
 
-Then run this from the CSVSee source directory::
+Then run this from the CSVSee source directory, optionally with ``-v`` or
+``--verbose``::
 
-    nosetests
+    nosetests --verbose
 
 This will also generate a sample graph, so you can visually confirm that the
 graphing feature is working as expected.
