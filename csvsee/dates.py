@@ -146,28 +146,6 @@ def format_regexp(simple_format):
     return (format, regexp)
 
 
-def memoize(func):
-    """Decorator to memoize a function of one or more arguments.
-    """
-    cache = {}
-    def wrapper(*args):
-        # Try returning the cached value
-        try:
-            return cache[args]
-        # Not in cache -- call the function and
-        # cache its return value for next time
-        except KeyError:
-            cache[args] = func(*args)
-            return cache[args]
-        # If one of the args is not valid as a
-        # dictionary index (such as a list), just
-        # call the function normally (no caching)
-        except TypeError:
-            return func(*args)
-    return wrapper
-
-
-@memoize
 def compiled_format_regexps(date_formats, time_formats):
     """Return a list of ``(format, compiled_regexp)`` for all combinations
     of ``date_formats`` and ``time_formats``.
