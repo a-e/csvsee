@@ -85,6 +85,10 @@ def grep_files(filenames, matches, dateformat='guess', resolution=60,
     row_temp = [(match, 0) for match in matches]
     rows = {}
 
+    # Compile regular expressions for matches
+    # (Shaves off a little bit of execution time)
+    compiled_matches = [re.compile(expr) for expr in matches]
+
     # Read each line of each file
     for filename in filenames:
         # Show progress bar?
@@ -131,9 +135,9 @@ def grep_files(filenames, matches, dateformat='guess', resolution=60,
                 rows[timestamp] = dict(row_temp)
 
             # Count the number of each match in this line
-            for expr in matches:
-                if re.search(expr, line):
-                    rows[timestamp][expr] += 1
+            for expr in compiled_matches:
+                if expr.search(line):
+                    rows[timestamp][expr.pattern] += 1
 
         # If using progress bar, print a newline
         if show_progress:

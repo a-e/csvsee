@@ -95,26 +95,18 @@ def parse(string, format):
         >>> parse('2010/08/28', '%m/%d/%y')
         Traceback (most recent call last):
         CannotParse: time data '2010/08/28' does not match format '%m/%d/%y'
-    """
-    try:
-        result = dt.datetime.strptime(string, format)
-    except ValueError, err:
-        # A bit of hack here, since strptime doesn't distinguish between
-        # total failure to parse a date, and success with trailing
-        # characters. This attempts to catch the possibility where a date
-        # format matches, but there's extra stuff at the end.
-        message = str(err)
-        data_remains = 'unconverted data remains: '
-        if message.startswith(data_remains):
-            # Try again with the unconverted data removed
-            junk = message[len(data_remains):]
-            clean = string[:-1*len(junk)]
-            result = dt.datetime.strptime(clean, format)
-        else:
-            raise CannotParse(message)
 
-    # If we got here, we got a result
-    return result
+    """
+    # Count the number of spaces in the format string (N), and
+    # truncate everything after the (N+1)th space
+    spaces = format.count(' ') + 1
+    truncated = ' '.join(string.split()[:spaces])
+    try:
+        result = dt.datetime.strptime(truncated, format)
+    except ValueError, err:
+        raise CannotParse(str(err))
+    else:
+        return result
 
 
 def format_regexp(simple_format):
