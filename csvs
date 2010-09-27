@@ -173,7 +173,7 @@ def graph_command(args):
         elif opt in graph.bools:
             graph[opt] = True
 
-        elif opt == '-save':
+        elif opt == 'save':
             save_file = args.pop(0)
 
         else:

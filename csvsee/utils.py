@@ -380,17 +380,38 @@ class ProgressBar:
         return str(self.prefix + ' ' + self.prog_bar)
 
 
-def filter_csv(csv_infile, csv_outfile, column_regexps):
-    """Filter ``csv_infile``, keeping only columns matching ``column_regexps``,
-    writing the filtered results to ``csv_outfile``.
+def filter_csv(csv_infile, csv_outfile, columns, match='regexp', action='include'):
+    """Filter ``csv_infile`` and write output to ``csv_outfile``.
+
+        columns
+            A list of regular expressions or exact column names
+        match
+            ``regexp`` to treat each value in ``columns`` as a regular
+            expression, ``exact`` to match exact literal column names
+        action
+            ``include`` to keep the specified ``columns``, or ``exclude``
+            to keep all columns *except* the specified ``columns``
+
     """
     # TODO: Factor out a 'filter_columns' function
     reader = csv.DictReader(open(csv_infile))
-    keep_columns = []
-    for expr in column_regexps:
-        # TODO: What if more than one expression matches a column?
-        # Find a way to avoid duplicates.
-        keep_columns += matching_fields(expr, reader.fieldnames)
+    # Do regular-expression matching of column names?
+    if match == 'regexp':
+        matching_columns = []
+        for expr in columns:
+            # TODO: What if more than one expression matches a column?
+            # Find a way to avoid duplicates.
+            matching_columns += matching_fields(expr, reader.fieldnames)
+    # Exact matching of column names
+    else:
+        matching_columns = columns
+
+    # Include or exclude?
+    if action == 'include':
+        keep_columns = matching_columns
+    else:
+        keep_columns = [col for col in reader.fieldnames
+                        if col not in matching_columns]
 
     # Create writer for the columns we're keeping; ignore any extra columns
     # passed to the writerow() method.
@@ -400,5 +421,32 @@ def filter_csv(csv_infile, csv_outfile, column_regexps):
     writer.writerow(dict(zip(keep_columns, keep_columns)))
     for row in reader:
         writer.writerow(row)
+
+
+def boring_columns(csvfile):
+    """Return a list of column names in ``csvfile`` that are "boring"--that is,
+    the data in them is always the same.
+    """
+    reader = csv.DictReader(open(csvfile))
+    # Assume all columns are boring until they prove to be interesting
+    boring = list(reader.fieldnames)
+    # Remember the first value from each column
+    prev = reader.next()
+    for row in reader:
+        # Check boring columns to see if they have become interesting yet
+        # (make a copy to prevent problems with popping while iterating)
+        for col in list(boring):
+            # If previous value was empty, set prev to current
+            # (this handles the case where a column is empty for a while,
+            # then gets a value later). This is not inherently interesting.
+            if not prev[col].strip():
+                prev[col] = row[col]
+            # If the current value is non-empty, and different from the
+            # previous, then it's interesting
+            elif row[col].strip() and row[col] != prev[col]:
+                boring.remove(col)
+
+    # Return names of all columns that never became interesting
+    return boring
 
 
