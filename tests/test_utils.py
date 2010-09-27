@@ -7,7 +7,7 @@ import os
 import csv
 from datetime import datetime
 from csvsee import utils
-from . import write_tempfile
+from . import write_tempfile, temp_filename
 
 
 def test_grep():
@@ -204,6 +204,62 @@ def test_xy_reader_without_timestamps():
         'Y': [2.0, 4.0, 6.0, 8.0, 10.0],
         'Z': [3.0, 6.0, 9.0, 12.0, 15.0],
     }
+    # Remove the temporary file
+    os.unlink(filename)
+
+
+def test_filter_csv():
+    """Test the `filter_csv` function.
+    """
+    infile = write_tempfile(
+        """Apples,Avocados,Bananas,Blueberries
+           1,3,5,7
+           2,4,6,8
+           3,6,9,12
+        """)
+    outfile = temp_filename('.csv')
+    # Filter by exact match, including given columns
+    utils.filter_csv(infile, outfile, ['Apples', 'Bananas'],
+                     match='exact', action='include')
+    reader = csv.DictReader(open(outfile))
+    assert reader.fieldnames == ['Apples', 'Bananas']
+
+    # Filter by exact match, excluding given columns
+    utils.filter_csv(infile, outfile, ['Apples', 'Bananas'],
+                     match='exact', action='exclude')
+    reader = csv.DictReader(open(outfile))
+    assert reader.fieldnames == ['Avocados', 'Blueberries']
+
+    # Filter by regexp, including given columns
+    utils.filter_csv(infile, outfile, ['A.*'],
+                     match='regexp', action='include')
+    reader = csv.DictReader(open(outfile))
+    assert reader.fieldnames == ['Apples', 'Avocados']
+
+    # Filter by regexp, excluding given columns
+    utils.filter_csv(infile, outfile, ['A.*'],
+                     match='regexp', action='exclude')
+    reader = csv.DictReader(open(outfile))
+    assert reader.fieldnames == ['Bananas', 'Blueberries']
+
+    # Remove the temporary files
+    os.unlink(infile)
+    os.unlink(outfile)
+
+
+def test_boring_columns():
+    """Test the `boring_columns` function.
+    """
+    filename = write_tempfile(
+        """Lame,Cool,Pointless,Fascinating
+           0,1,,2
+           0,2,123,4
+           0,3,123,6
+           0,4,123,8
+        """)
+    boring = utils.boring_columns(filename)
+    assert boring == ['Lame','Pointless']
+
     # Remove the temporary file
     os.unlink(filename)
 
