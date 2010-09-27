@@ -379,3 +379,26 @@ class ProgressBar:
         """
         return str(self.prefix + ' ' + self.prog_bar)
 
+
+def filter_csv(csv_infile, csv_outfile, column_regexps):
+    """Filter ``csv_infile``, keeping only columns matching ``column_regexps``,
+    writing the filtered results to ``csv_outfile``.
+    """
+    # TODO: Factor out a 'filter_columns' function
+    reader = csv.DictReader(open(csv_infile))
+    keep_columns = []
+    for expr in column_regexps:
+        # TODO: What if more than one expression matches a column?
+        # Find a way to avoid duplicates.
+        keep_columns += matching_fields(expr, reader.fieldnames)
+
+    # Create writer for the columns we're keeping; ignore any extra columns
+    # passed to the writerow() method.
+    writer = csv.DictWriter(open(csv_outfile, 'w'), keep_columns,
+                            extrasaction='ignore')
+    # Write the header (csv.DictWriter doesn't do this for us)
+    writer.writerow(dict(zip(keep_columns, keep_columns)))
+    for row in reader:
+        writer.writerow(row)
+
+

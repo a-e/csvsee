@@ -8,16 +8,32 @@ Usage::
 
 Command may be::
 
+    filter
     graph
     grep
     grinder
+    info
 
 Run ``csvs [command]`` with no further arguments to get help.
 """
 usage = __doc__
 
+"""
+Ideas
+-----
+
+Manipulation of .csv files, especially large ones
+- Display column names / column count / row count
+- Split into manageable pieces based on column name or position
+
+High-level analysis
+- Display "interesting" columns (ones with large or frequent variation)
+- Display "boring" columns (ones that are always the same or with little variation)
+
+"""
 
 import sys
+import csv
 
 from csvsee import utils
 from csvsee.graph import Graph
@@ -29,7 +45,7 @@ class UsageError (Exception):
 
 def graph_command(args):
     """
-    graph: Generage graphs from .csv data files.
+    Generage graphs from .csv data files.
 
     Usage::
 
@@ -177,7 +193,7 @@ def graph_command(args):
 
 def grep_command(args):
     """
-    grep: Create a .csv file by counting the number of occurrences of
+    Create a .csv file by counting the number of occurrences of
     text strings in one or more timestamped text files.
 
     Usage::
@@ -197,8 +213,6 @@ def grep_command(args):
             See http://docs.python.org/library/datetime.html for valid formats.
 
     """
-    # TODO: Regular expressions
-
     # Need at least five arguments
     if len(args) < 5:
         raise UsageError()
@@ -243,7 +257,8 @@ def grep_command(args):
 
 
 def grinder_command(args):
-    """grinder: Generate a .csv report of data from Grinder log files.
+    """
+    Generate a .csv report of data from Grinder log files.
 
     Usage::
 
@@ -287,11 +302,92 @@ def grinder_command(args):
         report.write_csv(stat, csv_filename)
 
 
+# TODO: Refactor some of this into a submodule
+import os, csv
+
+def info_command(args):
+    """
+    Display statistics and high-level analysis of a .csv file.
+
+    Usage::
+
+        csvs info <filename.csv> [-options]
+
+    Options::
+
+        -columns
+            Display all column names
+        -interesting
+        -boring
+    """
+    # Need a .csv filename at least
+    if len(args) < 1:
+        raise UsageError()
+
+    csvfile = args.pop(0)
+    show_columns = False
+
+    while args and args[0].startswith('-'):
+        opt = args.pop(0)
+        if opt == '-columns':
+            show_columns = True
+        else:
+            raise UsageError("Unknown option: '%s'" % opt)
+
+    reader = csv.DictReader(open(csvfile))
+    num_columns = len(reader.fieldnames)
+    print(csvfile)
+    print("%d columns" % num_columns)
+    if show_columns:
+        print("Column names:")
+        print("-------------")
+        for column in reader.fieldnames:
+            print(column)
+
+
+def filter_command(args):
+    """
+    Filter a .csv file, keeping only matching columns.
+
+    Usage::
+
+        csvs filter <in_file.csv> -match <expr1> <expr2> ... -out <out_file.csv>
+
+    """
+    # Need at least five arguments
+    if len(args) < 5:
+        raise UsageError()
+
+    infile = args.pop(0)
+    matches = []
+    outfile = ''
+
+    while args:
+        opt = args.pop(0)
+        if opt == '-match':
+            while not args[0].startswith('-'):
+                matches.append(args.pop(0))
+        elif opt == '-out':
+            outfile = args.pop(0)
+        else:
+            raise UsageError("Unknown option: '%s'" % opt)
+
+    if not matches:
+        raise UsageError("Please provide one or more match expressions with -match")
+    if not outfile:
+        raise UsageError("Please provide an output file with -out")
+
+    utils.filter_csv(infile, outfile, matches)
+
+
+
 # Commands and the function that handles them
 command_functions = {
     'graph': graph_command,
     'grep': grep_command,
     'grinder': grinder_command,
+    'info': info_command,
+    'filter': filter_command,
 }
 
 
