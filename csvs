@@ -425,5 +425,8 @@ if __name__ == '__main__':
         command_functions[command](args)
     except UsageError, message:
         exit_msg(function.__doc__, message)
+    except KeyboardInterrupt:
+        print("Aborted!")
+        sys.exit(0)
 
 

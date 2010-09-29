@@ -116,8 +116,11 @@ def grep_files(filenames, matches, dateformat='guess', resolution=60,
                     sys.stdout.write('\r' + str(progress))
                     sys.stdout.flush()
 
+            # Remove leading/trailing whitespace and newlines
+            line = line.strip()
+
             # If line is empty, skip it
-            if line.strip() == '':
+            if not line:
                 continue
 
             # See if this line has a timestamp
@@ -427,6 +430,8 @@ def boring_columns(csvfile):
     """Return a list of column names in ``csvfile`` that are "boring"--that is,
     the data in them is always the same.
     """
+    # TODO: Consider columns that never deviate much (less than 1%, say)
+    # to be boring also
     reader = csv.DictReader(open(csvfile))
     # Assume all columns are boring until they prove to be interesting
     boring = list(reader.fieldnames)

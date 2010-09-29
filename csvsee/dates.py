@@ -100,9 +100,10 @@ def parse(string, format):
     # Count the number of spaces in the format string (N), and
     # truncate everything after the (N+1)th space
     spaces = format.count(' ') + 1
-    truncated = ' '.join(string.split()[:spaces])
+    string = ' '.join(string.split()[:spaces])
+
     try:
-        result = dt.datetime.strptime(truncated, format)
+        result = dt.datetime.strptime(string, format)
     except ValueError, err:
         raise CannotParse(str(err))
     else:
@@ -245,6 +246,5 @@ def date_chop(line, dateformat='%m/%d/%y %I:%M:%S %p', resolution=60):
     rounded_seconds = (epoch_seconds / resolution) * resolution
     # Convert back to a datetime
     return dt.datetime.fromtimestamp(rounded_seconds)
-
 
 
