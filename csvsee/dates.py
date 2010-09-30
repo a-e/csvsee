@@ -139,7 +139,7 @@ def format_regexp(simple_format):
     return (format, regexp)
 
 
-def compiled_format_regexps(date_formats, time_formats):
+def _compiled_format_regexps(date_formats, time_formats):
     """Return a list of ``(format, compiled_regexp)`` for all combinations
     of ``date_formats`` and ``time_formats``.
     """
@@ -199,7 +199,7 @@ def guess_format(string):
         '%Y-%m-%d %H:%M:%S'
 
     """
-    format_regexps = compiled_format_regexps(_date_formats, _time_formats)
+    format_regexps = _compiled_format_regexps(_date_formats, _time_formats)
     for format, regexp in format_regexps:
         if regexp.search(string):
             return format

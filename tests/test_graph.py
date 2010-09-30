@@ -30,7 +30,7 @@ class TestGraph:
         g.save(self.png_file)
         assert os.path.isfile(self.png_file)
         # Show the graph, for a visual confirmation
-        #g.show()
+        g.show()
 
 
     def test_graph_peak(self):
