@@ -62,7 +62,6 @@ statistics, and counting the number of accumulations done so far.
 """
 
 import os
-import sys
 import shlex
 import csv
 from glob import glob

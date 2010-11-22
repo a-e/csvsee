@@ -3,9 +3,7 @@
 """Provides a `Graph` class for creating graphs from ``.csv`` data files.
 """
 
-import sys
 import csv
-from datetime import datetime, timedelta
 
 from csvsee import utils, dates
 import pylab

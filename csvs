@@ -303,7 +303,6 @@ def grinder_command(args):
 
 
 # TODO: Refactor some of this into a submodule
-import os, csv
 
 def info_command(args):
     """
