@@ -21,6 +21,7 @@ Analyzer`_, which serves a similar purpose in a more specific domain.
 .. _Grinder: http://grinder.sourceforge.net/
 .. _Grinder Analyzer: http://track.sourceforge.net/
 
+
 Features
 --------
 * Generate graphs of just about any numerical data, particularly those having timestamps
@@ -84,6 +85,7 @@ usage notes and integrated help, or see the documentation below:
     :maxdepth: 2
 
     csvs
+
 
 API
 ---
