@@ -24,6 +24,7 @@ sys.path.append(os.path.abspath('..'))
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'rst2pdf.pdfbuilder',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -123,7 +124,7 @@ html_title = "CSVSee documentation"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-html_style = 'custom.css'
+html_style = 'rtd.css'
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
@@ -195,4 +196,10 @@ latex_documents = [
 
 # If false, no module index is generated.
 #latex_use_modindex = True
+
+# rst2pdf options
+pdf_documents = [
+    ('index', u'CSVSee', u'CSVSee', u'Eric Pierce'),
+]
+pdf_stylesheets = ['sphinx', 'kerning', 'a4']
 
