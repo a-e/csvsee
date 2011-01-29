@@ -6,8 +6,13 @@
 import csv
 
 from csvsee import utils, dates
-import pylab
-import matplotlib as mpl
+try:
+    import pylab
+    import matplotlib as mpl
+except ImportError:
+    print("Could not import pylab and/or matplotlib. Please install python-matplotlib.")
+    print("Continuing anyway, but you will not be able to use the graphing feature.")
+    # Continue anyway, so docs can be generated
 
 
 class Graph (object):

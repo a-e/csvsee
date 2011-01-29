@@ -18,6 +18,7 @@
  *
  * white hover: #d1d9df;
  * medium blue hover: #697983;
+ * green highlight: #8ecc4c
  */
 
 @import url("basic.css");
@@ -74,6 +75,7 @@ div.related ul li {
     float: left;
     display: block;
     color: transparent; /* Hide the >> and | characters */
+    font-size: 0.8em;
 }
 
 div.related ul li.right {
@@ -88,17 +90,30 @@ div.related ul li a {
     color: #ffffff;
     padding: 5px 10px;
     background-color: #8ca1af;
+    border: 1px solid #8ca1af;
     text-shadow: 0 1px rgba(0, 0, 0, 0.5);
-    -moz-border-radius: 3px 3px 3px 3px;
+    border-radius: 3px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
     -moz-box-shadow: 0 1px 1px #465158;
 }
 div.related ul li a tt {
-    color: #ffffff;
+    background: inherit !important;
+    color: inherit !important;
 }
 
 div.related ul li a:hover {
-    background: #697983;
+    background-color: #8ecc4c;
+    border-bottom-color: #50732b;
+    border-left-color: #6b9939;
+    border-right-color: #6b9939;
+    border-top-color: #b0e090;
+    color: #ffffff;
     text-decoration: none;
+}
+div.related ul li a tt:hover {
+    background: inherit !important;
+    color: inherit !important;
 }
 
 /* These aren't too useful, since the related bar
@@ -120,14 +135,18 @@ div.sphinxsidebar {
 }
 
 div.sphinxsidebar h3, div.sphinxsidebar h4 {
-    margin: 1.2em 0 0.5em 0;
+    margin: 1.2em 0 0.3em 0;
     font-size: 1em;
-    padding: 0.2em 0 0.2em 0.6em;
-    color: #444444;
-    border: 1px solid #444444;
-    background-color: #d1d9df;
-    text-shadow: 0 1px rgba(255, 255, 255, 0.5);
-    -moz-border-radius: 3px 3px 3px 3px;
+    padding: 0;
+    color: #222222;
+    font-family: "ff-meta-web-pro-1", "ff-meta-web-pro-2", "Arial", "Helvetica Neue", sans-serif;
+    /*
+    border: 1px solid #cccccc;
+    background-color: #ffffff;
+    border-radius: 3px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    */
     /* -moz-box-shadow: 0 1px 1px #465158; */
 }
 
@@ -135,10 +154,9 @@ div.sphinxsidebar h3 a {
     color: #444444;
 }
 
-div.sphinxsidebar ul {
-    padding-left: 1.5em;
-    margin-top: 7px;
-    padding: 0;
+div.sphinxsidebar ul,
+div.sphinxsidebar p {
+    padding-left: 1em;
     line-height: 130%;
 }
 
@@ -247,7 +265,7 @@ cite, code, tt {
 
 tt {
     background-color: #f2f2f2;
-    border-bottom: 1px solid #ddd;
+    /* border-bottom: 1px solid #ddd; */
     color: #333;
 }
 
@@ -268,8 +286,11 @@ pre {
     line-height: 120%;
     padding: 0.5em;
     border: 1px solid #ccc;
-    background-color: #f8f8f8;
-    -moz-border-radius: 5px 5px 5px 5px;
+    /* background-color: #f8f8f8; */
+    background-color: #f0f4f8;
+    border-radius: 6px;
+    -webkit-border-radius: 6px;
+    -moz-border-radius: 6px;
 }
 
 pre a {
@@ -367,3 +388,44 @@ div.viewcode-block:target {
 dl {
     margin: 1em 0 2.5em 0;
 }
+
+dt:target, .highlight {
+    background: #9edc5c;
+}
+
+/* Search text box and "Go" button */
+input,
+div.sphinxsidebar input {
+    border: 1px solid #444;
+    border-radius: 3px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    float: left;
+}
+
+input[type="text"] {
+    padding: 2px;
+    width: 150px;
+}
+
+input[type="submit"] {
+    color: #444;
+    background-color: #ddd;
+    padding: 2px 6px;
+    font-weight: bold;
+}
+
+input[type="submit"]:hover {
+    color: #ffffff;
+    background-color: #8ecc4c;
+    border-bottom-color: #50732b;
+    border-left-color: #6b9939;
+    border-right-color: #6b9939;
+    border-top-color: #b0e090;
+}
+
+div.sphinxsidebar p.searchtip {
+    clear: both;
+    padding: 0.2em 0;
+}
+
