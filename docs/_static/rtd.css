@@ -418,6 +418,7 @@ dt:target, .highlight {
 
 /* Search text box and "Go" button */
 #searchbox {
+    margin-top: 2em;
     background: #ddd;
     padding: 0.5em;
     border-radius: 6px;
