@@ -129,9 +129,11 @@ div.sphinxsidebarwrapper {
 
 div.sphinxsidebar {
     margin: 0;
+    position: absolute;
+    top: 3em;
+    left: 0;
     padding: 0 1em;
     width: 210px;
-    float: left;
     font-size: 1em;
     text-align: left;
 }
