@@ -37,7 +37,7 @@ body {
     line-height: 150%;
     text-align: center;
     color: black;
-    background-color: #eee;
+    background-color: #465158;
     padding: 0;
 
     margin: 0;
@@ -46,6 +46,7 @@ body {
 
 div.document {
     text-align: left;
+    background-color: #EEEEEE;
 }
 
 div.bodywrapper {
@@ -65,7 +66,7 @@ div.related {
 }
 
 div.related ul {
-    height: 3em;
+    height: 41px;
 }
 
 div.related ul li {
@@ -83,11 +84,18 @@ div.related ul li.right {
 }
 
 div.related ul li a {
+    order: none;
+    background-color: inherit;
     font-weight: bold;
     margin: 6px 0 6px 0;
     line-height: 1.75em;
     color: #ffffff;
     padding: 5px 10px;
+    border: none;
+    border-radius: 3px;
+}
+
+div.related ul li.right a {
     background-color: #8ca1af;
     border: 1px solid #8ca1af;
     text-shadow: 0 1px rgba(0, 0, 0, 0.5);
@@ -96,6 +104,7 @@ div.related ul li a {
     -moz-border-radius: 3px;
     -moz-box-shadow: 0 1px 1px #465158;
 }
+
 div.related ul li a tt {
     background: inherit !important;
     color: inherit !important;
@@ -123,19 +132,27 @@ div.related ul li a tt:hover {
 div.related ul li:first-child a { }
 div.related ul li:last-child a { }
 
+div.documentwrapper {
+    float: left;
+    width: 100%;
+    background-color: #EEEEEE;
+}
+
 div.sphinxsidebarwrapper {
     padding: 0;
 }
 
 div.sphinxsidebar {
     margin: 0;
-    position: absolute;
+    margin-left: -100%;
+    float: left;
     top: 3em;
     left: 0;
     padding: 0 1em;
     width: 210px;
     font-size: 1em;
     text-align: left;
+    background-color: #EEEEEE;
 }
 
 div.sphinxsidebar h3, div.sphinxsidebar h4 {
@@ -166,6 +183,13 @@ div.sphinxsidebar p {
 
 div.sphinxsidebar ul ul {
     margin-left: 20px;
+}
+
+div.sphinxsidebar ul {
+    overflow: hidden;
+}
+div.sphinxsidebar ul:hover {
+    overflow: visible;
 }
 
 div.footer {
@@ -419,6 +443,7 @@ dt:target, .highlight {
 /* Search text box and "Go" button */
 #searchbox {
     margin-top: 2em;
+    margin-bottom: 1em;
     background: #ddd;
     padding: 0.5em;
     border-radius: 6px;
@@ -475,4 +500,3 @@ div.sphinxsidebar p.searchtip {
     clear: both;
     padding: 0.5em 0 0 0;
 }
-
