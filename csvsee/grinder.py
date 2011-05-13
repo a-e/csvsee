@@ -298,7 +298,7 @@ def grinder_files(include_dir):
     out_data_files = []
     for (path, dirs, files) in os.walk(include_dir):
         outfiles = glob(os.path.join(path, 'out_*.log'))
-        datafiles = glob(os.path.join(path, 'data_*.log'))
+        datafiles = sorted(glob(os.path.join(path, 'data_*.log')))
         if outfiles and datafiles:
             out_data_files.append((outfiles[0], datafiles))
 
