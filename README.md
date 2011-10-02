@@ -3,7 +3,7 @@ CSVSee
 
 This project includes tools for graphing and manipulating .csv data files.
 
-[Full documentation is on ReadTheDocs](http://csvsee.readthedocs.org/en/latest/).
+[Read The Docs](http://csvsee.readthedocs.org/en/latest/).
 
 
 Copyright
