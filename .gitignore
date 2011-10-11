@@ -3,3 +3,4 @@ MANIFEST
 dist
 docs/_build
 *.pyc
+htmlcov/*
