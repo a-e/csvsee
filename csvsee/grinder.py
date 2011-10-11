@@ -64,21 +64,35 @@ statistics, and counting the number of accumulations done so far.
 import os
 import shlex
 import csv
+import re
 from glob import glob
 from datetime import datetime
 
 
 def get_test_names(outfile):
     """Return a dict of ``{number: name}`` for each test from the summary
-    portion of the given Grinder ``out*`` file.
+    portion of the given Grinder ``out*`` file. If the summary portion is
+    not found, look for test numbers and names as logged by grinder-webtest.
     """
-    tests = {}
+    summary_tests = {}
+    webtest_tests = {}
     for line in open(outfile, 'r'):
+        # Look for summary lines
         if line.startswith('Test '):
             fields = shlex.split(line)
             number, name = int(fields[1]), fields[-1]
-            tests[number] = name
-    return tests
+            summary_tests[number] = name
+        # Look for grinder-webtest lines
+        elif '------' in line:
+            m = re.match('^.*: ------ Test (\d+): (.+)$', line)
+            if m:
+                number, name = m.groups()
+                webtest_tests[int(number)] = name
+
+    if summary_tests:
+        return summary_tests
+    else:
+        return webtest_tests
 
 
 class NoTestNames (Exception):

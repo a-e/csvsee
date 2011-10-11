@@ -2,3 +2,4 @@ CSVSee.egg-info
 MANIFEST
 dist
 docs/_build
+*.pyc
