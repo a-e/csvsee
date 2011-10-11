@@ -4,30 +4,12 @@
 """
 
 import os
-import sys
 import tempfile
-import shutil
 
 # Directory where test data files are stored
 data_dir = os.path.join(os.path.dirname(__file__), 'data')
 # Temporary directory for output files
 temp_dir = tempfile.mkdtemp(prefix='csvsee_test')
-
-
-# Package-level setup and teardown
-
-def setup():
-    """Package-level setup.
-    """
-    # Append to sys.path in case csvsee isn't installed
-    sys.path.append(os.path.abspath('..'))
-
-
-def teardown():
-    """Package-level teardown.
-    """
-    # Remove temporary output folder
-    shutil.rmtree(temp_dir)
 
 
 # Helper functions

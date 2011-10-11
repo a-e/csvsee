@@ -36,24 +36,20 @@ class TestDates (unittest.TestCase):
             ('8/30/2010 13:57 blah',        '%m/%d/%Y %H:%M'),
             ('8/30/2010 1:57:00 PM blah',   '%m/%d/%Y %I:%M:%S %p'),
         ]
-        # TODO: Move temp file creation into setUp
         for data, expected in data_formats:
             # Create a temporary file containing the data
             filename = write_tempfile(data)
-            try:
-                actual = dates.guess_file_date_format(filename)
-            except:
-                self.assertTrue(False)
-            else:
-                self.assertEqual(actual, expected)
-            finally:
-                # Remove the temp file
-                os.unlink(filename)
+            actual = dates.guess_file_date_format(filename)
+            self.assertEqual(actual, expected)
+            # Remove the temp file
+            os.unlink(filename)
 
         # TODO: Guess format in a .csv file
 
 
     def test_guess_file_date_format_exception(self):
+        """guess_file_date_format raises an exception when guessing fails.
+        """
         filename = write_tempfile('Data file without a date')
         self.assertRaises(dates.CannotParse,
                           dates.guess_file_date_format,
