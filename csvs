@@ -316,8 +316,6 @@ def info_command(args):
 
         -columns
             Display all column names
-        -interesting
-        -boring
     """
     # Need a .csv filename at least
     if len(args) < 1:
