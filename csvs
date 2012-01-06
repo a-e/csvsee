@@ -294,12 +294,7 @@ def grinder_command(args):
 
     # Generate the report
     report = grinder.Report(resolution, out_file, *data_files)
-
-    # Write one .csv file for each statistic
-    for stat in grinder.Test.all_stats:
-        csv_filename = "%s_%s.csv" % (csv_prefix, stat.replace(' ', '_'))
-        print("Writing %s" % csv_filename)
-        report.write_csv(stat, csv_filename)
+    report.write_all_csvs(csv_prefix)
 
 
 # TODO: Refactor some of this into a submodule

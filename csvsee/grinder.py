@@ -78,7 +78,7 @@ def get_test_names(outfile):
     webtest_tests = {}
     for line in open(outfile, 'r'):
         # Look for summary lines
-        if line.startswith('Test '):
+        if line.lstrip('(').startswith('Test '):
             fields = shlex.split(line)
             number, name = int(fields[1]), fields[-1]
             summary_tests[number] = name
@@ -201,6 +201,9 @@ class Test:
         # For averaged stats, divide by count
         elif stat in Test.average_stats:
             return (bin.stats[stat] / bin.count)
+        # Special handling for transaction count
+        elif stat == 'transactions':
+            return bin.count
         else:
             raise ValueError("Unknown stat: %s" % stat)
 
@@ -300,6 +303,21 @@ class Report:
             csv_writer.writerow(row)
             # Step to the next timestamp
             this_time += self.resolution
+
+
+    def write_all_csvs(self, csv_prefix):
+        """Write all CSV files for this report to files with the given prefix.
+        """
+        # Specific stats
+        for stat in Test.all_stats:
+            csv_filename = "%s_%s.csv" % (csv_prefix, stat.replace(' ', '_'))
+            print("Writing %s" % csv_filename)
+            self.write_csv(stat, csv_filename)
+        # Another file for transaction counts
+        csv_filename = "%s_Transaction_count.csv" % csv_prefix
+        print("Writing %s" % csv_filename)
+        self.write_csv('transactions', csv_filename)
+
 
 
 def grinder_files(include_dir):

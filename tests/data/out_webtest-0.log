@@ -6,6 +6,7 @@
 8/31/10 3:10:27 AM (process XP-0): executing "grinder_webtest.py" using Jython 2.2.1
 8/31/10 3:10:28 AM (process XP-0): registered plug-in net.grinder.plugin.http.HTTPPlugin
 8/31/10 3:10:30 AM (process XP-0): starting threads
+8/31/10 3:10:30 AM (thread 0): ------ Test 1000: First page
 8/31/10 3:10:30 AM (thread 0): ------ Test 1001: First test
 8/31/10 3:10:30 AM (thread 0): ------ Test 1002: Second test
 8/31/10 3:10:30 AM (thread 0): ------ Test 1003: Third test

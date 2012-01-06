@@ -13,6 +13,7 @@ class TestGrinder (unittest.TestCase):
         """Test the `get_test_names` function.
         """
         expect = {
+            1000: 'First page',
             1001: 'First test',
             1002: 'Second test',
             1003: 'Third test',
@@ -94,6 +95,10 @@ class TestGrinder (unittest.TestCase):
         self.assertEqual(test.stat_at_time('Errors', 1283195460), 0)
         self.assertEqual(test.stat_at_time('Errors', 1283195760), 0)
         self.assertEqual(test.stat_at_time('Errors', 1283195820), 0)
+        # Transaction counts
+        self.assertEqual(test.stat_at_time('transactions', 1283195460), 12)
+        self.assertEqual(test.stat_at_time('transactions', 1283195760), 1)
+        self.assertEqual(test.stat_at_time('transactions', 1283195820), 11)
         # Fetching stats outside test's timestamp range
         self.assertEqual(test.stat_at_time('Test time', 9999999999), 0)
         self.assertEqual(test.stat_at_time('Errors', 9999999999), 0)
@@ -120,16 +125,17 @@ class TestGrinder (unittest.TestCase):
         # Ensure data matches what's expected
         lines = [line.rstrip() for line in open(report_csv)]
         self.assertEqual(lines, [
-            'GMT,1001: First test,1002: Second test,1003: Third test,1004: Fourth test,1005: Fifth test,1006: Sixth test',
-            '08/30/2010 19:10:00.000,1546,318,2557,35882,0,0',
-            '08/30/2010 19:11:00.000,0,0,0,0,1883,2333',
-            '08/30/2010 19:12:00.000,0,0,0,0,0,0',
-            '08/30/2010 19:13:00.000,0,0,0,0,0,0',
-            '08/30/2010 19:14:00.000,0,0,0,0,0,0',
-            '08/30/2010 19:15:00.000,0,0,0,0,0,0',
-            '08/30/2010 19:16:00.000,1270,322,2196,33988,2054,2411',
-            '08/30/2010 19:17:00.000,0,0,0,0,2080,2848',
+            'GMT,1000: First page,1001: First test,1002: Second test,1003: Third test,1004: Fourth test,1005: Fifth test,1006: Sixth test',
+            '08/30/2010 19:10:00.000,34777,1546,318,2557,35882,0,0',
+            '08/30/2010 19:11:00.000,0,0,0,0,0,1883,2333',
+            '08/30/2010 19:12:00.000,0,0,0,0,0,0,0',
+            '08/30/2010 19:13:00.000,0,0,0,0,0,0,0',
+            '08/30/2010 19:14:00.000,0,0,0,0,0,0,0',
+            '08/30/2010 19:15:00.000,0,0,0,0,0,0,0',
+            '08/30/2010 19:16:00.000,34765,1270,322,2196,33988,2054,2411',
+            '08/30/2010 19:17:00.000,0,0,0,0,0,2080,2848'
         ])
+
         # Remove temporary file
         os.unlink(report_csv)
 
