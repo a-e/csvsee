@@ -119,7 +119,11 @@ class Bin:
         All statistics are accumulated as integers.
         """
         for stat in self.stats:
-            self.stats[stat] += int(row[stat])
+	    if stat == '503 Errors':
+		if row['HTTP response code'].find('503')>=0 :
+	        	self.stats[stat] += 1
+	    else:
+	        self.stats[stat] += int(row[stat])
         self.count += 1
 
 
@@ -138,7 +142,9 @@ class Test:
     # Statistics to sum
     sum_stats = [
         'Errors',
-        'HTTP response errors',
+        #'HTTP response errors',
+	'HTTP response code',
+	'503 Errors',
     ]
     # Statistics to average
     average_stats = [
@@ -202,8 +208,10 @@ class Test:
         elif stat in Test.average_stats:
             return (bin.stats[stat] / bin.count)
         # Special handling for transaction count
-        elif stat == 'transactions':
+        elif stat == 'transactions' or stat == 'transactions-page-requests':
             return bin.count
+        elif stat == 'Test time-page-requests':
+            return (bin.stats['Test time'] / bin.count)
         else:
             raise ValueError("Unknown stat: %s" % stat)
 
@@ -286,7 +294,14 @@ class Report:
         for test_num in test_numbers:
             trunc_name = str(self.tests[test_num])[:trunc_length]
             #header.append(str(test_num))
-            header.append(trunc_name)
+       	    if stat == 'transactions-page-requests' or stat == 'Test time-page-requests':
+		if str(test_num)[::-1].find('00') == 0 :
+		    header.append(trunc_name)
+       	    elif stat == 'transactions' or stat == 'Test time':
+		if str(test_num)[::-1].find('00') != 0 :
+		    header.append(trunc_name)
+	    else :
+            	header.append(trunc_name)
         # Write the header row
         csv_writer.writerow(header)
 
@@ -298,7 +313,15 @@ class Report:
             timestamp = datetime.strftime(timestamp, '%m/%d/%Y %H:%M:%S') + '.000'
             row = [timestamp]
             for test_num in test_numbers:
-                row.append(self.tests[test_num].stat_at_time(stat, this_time))
+
+       		if stat == 'transactions-page-requests' or stat == 'Test time-page-requests':
+			if str(test_num)[::-1].find('00') == 0 :
+				row.append(self.tests[test_num].stat_at_time(stat, this_time))
+       		elif stat == 'transactions' or stat=='Test time':	
+			if str(test_num)[::-1].find('00') != 0 :
+				row.append(self.tests[test_num].stat_at_time(stat, this_time))
+		else :
+			row.append(self.tests[test_num].stat_at_time(stat, this_time))
             # Write the row
             csv_writer.writerow(row)
             # Step to the next timestamp
@@ -317,6 +340,14 @@ class Report:
         csv_filename = "%s_Transaction_count.csv" % csv_prefix
         print("Writing %s" % csv_filename)
         self.write_csv('transactions', csv_filename)
+        # Another file for transaction counts - page requests
+        csv_filename = "%s_Transaction_count_page_requests_only.csv" % csv_prefix
+        print("Writing %s" % csv_filename)
+        self.write_csv('transactions-page-requests', csv_filename)
+
+        csv_filename = "%s_Test-time_page_requests_only.csv" % csv_prefix
+        print("Writing %s" % csv_filename)
+        self.write_csv('Test time-page-requests', csv_filename)
 
 
 
