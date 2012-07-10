@@ -156,14 +156,15 @@ class Graph (object):
             self.axes.set_ylim(0, self['ymax'])
 
         # Draw a legend for the figure
-        # If a Y label was given, use that; otherwise, strip
-        # common prefix from labels, and use that as the Y label
-        if self['ylabel']:
-            labels = [col for col in y_columns]
-            self.axes.set_ylabel(self['ylabel'])
-        else:
+
+        # Use prefix-based Y axis label?
+        if self['ylabel'] == 'prefix':
             prefix, labels = utils.strip_prefix(y_columns)
             self.axes.set_ylabel(prefix)
+        # Use given label (possibly no label)
+        else:
+            labels = [col for col in y_columns]
+            self.axes.set_ylabel(self['ylabel'])
 
         # Truncate labels if desired
         if self['truncate'] > 0:

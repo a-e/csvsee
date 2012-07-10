@@ -45,7 +45,7 @@ class UsageError (Exception):
 
 def graph_command(args):
     """
-    Generage graphs from .csv data files.
+    Generage a graph from a .csv data file.
 
     Usage::
 
@@ -90,9 +90,10 @@ def graph_command(args):
             Use the given string as the label of the X axis. If omitted, the
             name of the X-column is used.
 
-        -ylabel "Label string"
-            Use the given string as the label of the Y axis. If omitted, the
-            prefix common to all the given column names is used.
+        -ylabel "Label string" | prefix
+            Use the given string as the label of the Y axis. By default, the
+            Y axis has no label. If 'prefix', the prefix common to all the given
+            column names is used.
 
         -ymax <number>
             Set the maximum Y-value beyond which the graph is cropped. By default,
