@@ -58,10 +58,10 @@ One advantage of using ``pip`` is that you can uninstall later like so::
 
     sudo pip uninstall CSVSee
 
-If you'd rather use a copy of the latest development version, branch it using
-Bazaar_::
+If you'd rather use a copy of the latest development version, clone it using
+Git_::
 
-    bzr branch lp:csvsee
+    git clone git://github.com/a-e/csvsee.git
 
 then install as before using ``setup.py`` or ``pip``.
 
@@ -69,7 +69,7 @@ Python_ is required. The ``graph`` command also depends on matplotlib_ and
 NumPy_.
 
 .. _downloads page: https://launchpad.net/csvsee/+download
-.. _Bazaar: http://bazaar.canonical.com/
+.. _Git: http://git-scm.com/
 .. _pip: http://pypi.python.org/pypi/pip
 .. _Python: http://python.org/download/
 .. _matplotlib: http://sourceforge.net/projects/matplotlib/files/matplotlib/matplotlib-0.99.1/
