@@ -6,13 +6,13 @@
 import os
 import unittest
 from csvsee import graph, utils
-from . import data_dir, temp_filename
+from . import csv_dir, temp_filename
 
 class TestGraph (unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.png_file = temp_filename('png')
-        cls.csv_file = os.path.join(data_dir, 'response_time.csv')
+        cls.csv_file = os.path.join(csv_dir, 'response_time.csv')
 
 
     @classmethod

@@ -6,7 +6,7 @@
 import os
 import unittest
 from csvsee import grinder
-from . import data_dir, temp_filename
+from . import basic_dir, data_dir, temp_filename
 
 class TestGrinder (unittest.TestCase):
     def test_get_test_names(self):
@@ -22,11 +22,11 @@ class TestGrinder (unittest.TestCase):
             1006: 'Sixth test',
         }
         # Works with an out*.log containing a summary
-        outfile = os.path.join(data_dir, 'out_XP-0.log')
+        outfile = os.path.join(basic_dir, 'out_XP-0.log')
         self.assertEqual(grinder.get_test_names(outfile), expect)
         # Works with an out*.log having no summary, but
         # having grinder-webtest "------ Test <num>: Description"
-        outfile = os.path.join(data_dir, 'out_webtest-0.log')
+        outfile = os.path.join(data_dir, 'webtest', 'out_webtest-0.log')
         self.assertEqual(grinder.get_test_names(outfile), expect)
 
 
@@ -54,7 +54,7 @@ class TestGrinder (unittest.TestCase):
         (that is, a file that's either not a Grinder out* file, or one that
         hasn't finished writing test names to the end).
         """
-        outfile = os.path.join(data_dir, 'incomplete.log')
+        outfile = os.path.join(data_dir, 'incomplete', 'incomplete.log')
         self.assertRaises(grinder.NoTestNames,
                           grinder.Report, 60, outfile)
 
@@ -62,9 +62,9 @@ class TestGrinder (unittest.TestCase):
     def test_Report(self):
         """Test the `Report` class.
         """
-        outfile = os.path.join(data_dir, 'out_XP-0.log')
-        data0 = os.path.join(data_dir, 'data_XP-0.log')
-        data1 = os.path.join(data_dir, 'data_XP-1.log')
+        outfile = os.path.join(basic_dir, 'out_XP-0.log')
+        data0 = os.path.join(basic_dir, 'data_XP-0.log')
+        data1 = os.path.join(basic_dir, 'data_XP-1.log')
         report = grinder.Report(60, outfile, data0, data1)
 
         self.assertEqual(report.resolution, 60)
@@ -109,8 +109,9 @@ class TestGrinder (unittest.TestCase):
         bin = test.bins[1283195460]
         self.assertEqual(bin.count, 12)
         self.assertEqual(bin.stats, {
+            '503 Errors': 0,
             'Errors': 0,
-            'HTTP response errors': 0,
+            'HTTP response code': 2400,
             'HTTP response length': 1956,
             'Test time': 28006,
         })
@@ -125,15 +126,15 @@ class TestGrinder (unittest.TestCase):
         # Ensure data matches what's expected
         lines = [line.rstrip() for line in open(report_csv)]
         self.assertEqual(lines, [
-            'GMT,1000: First page,1001: First test,1002: Second test,1003: Third test,1004: Fourth test,1005: Fifth test,1006: Sixth test',
-            '08/30/2010 19:10:00.000,34777,1546,318,2557,35882,0,0',
-            '08/30/2010 19:11:00.000,0,0,0,0,0,1883,2333',
-            '08/30/2010 19:12:00.000,0,0,0,0,0,0,0',
-            '08/30/2010 19:13:00.000,0,0,0,0,0,0,0',
-            '08/30/2010 19:14:00.000,0,0,0,0,0,0,0',
-            '08/30/2010 19:15:00.000,0,0,0,0,0,0,0',
-            '08/30/2010 19:16:00.000,34765,1270,322,2196,33988,2054,2411',
-            '08/30/2010 19:17:00.000,0,0,0,0,0,2080,2848'
+            'GMT,1001: First test,1002: Second test,1003: Third test,1004: Fourth test,1005: Fifth test,1006: Sixth test',
+            '08/30/2010 19:10:00.000,1546,318,2557,35882,0,0',
+            '08/30/2010 19:11:00.000,0,0,0,0,1883,2333',
+            '08/30/2010 19:12:00.000,0,0,0,0,0,0',
+            '08/30/2010 19:13:00.000,0,0,0,0,0,0',
+            '08/30/2010 19:14:00.000,0,0,0,0,0,0',
+            '08/30/2010 19:15:00.000,0,0,0,0,0,0',
+            '08/30/2010 19:16:00.000,1270,322,2196,33988,2054,2411',
+            '08/30/2010 19:17:00.000,0,0,0,0,2080,2848'
         ])
 
         # Remove temporary file
@@ -144,11 +145,11 @@ class TestGrinder (unittest.TestCase):
         """Test the `grinder_files` function.
         """
         # Expected out* and data* filenames
-        outfile = os.path.join(data_dir, 'out_XP-0.log')
-        data0 = os.path.join(data_dir, 'data_XP-0.log')
-        data1 = os.path.join(data_dir, 'data_XP-1.log')
+        outfile = os.path.join(basic_dir, 'out_XP-0.log')
+        data0 = os.path.join(basic_dir, 'data_XP-0.log')
+        data1 = os.path.join(basic_dir, 'data_XP-1.log')
 
-        self.assertEqual(grinder.grinder_files(data_dir), [
+        self.assertEqual(grinder.grinder_files(basic_dir), [
             (outfile, [data0, data1])
         ])
 

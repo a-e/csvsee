@@ -8,6 +8,8 @@ import tempfile
 
 # Directory where test data files are stored
 data_dir = os.path.join(os.path.dirname(__file__), 'data')
+basic_dir = os.path.join(data_dir, 'basic')
+csv_dir = os.path.join(data_dir, 'csv')
 # Temporary directory for output files
 temp_dir = tempfile.mkdtemp(prefix='csvsee_test')
 
