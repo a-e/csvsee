@@ -43,6 +43,12 @@ This software is open source, under the terms of the `simplified BSD license`_.
 
 Installation
 ------------
+
+First, you may need to install some dependencies like this::
+
+    $ sudo apt-get install python-dev libpng-dev
+    $ pip install -r requirements.txt
+
 If you want to install an official release, first download one from the
 `downloads page`_, and extract it somewhere.
 
