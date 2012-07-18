@@ -283,31 +283,28 @@ class Report:
         # Test number determines the order of columns
         test_numbers = sorted(self.tests.keys())
 
+        # Certain kinds of stat need certain test numbers filtered out.
+        # For page-requests, only include test numbers ending in 00
+        if stat in ['transactions-page-requests', 'Test time-page-requests']:
+            test_numbers = [n for n in test_numbers if n % 100 == 0]
+        # For transactions/test-time, only include those NOT ending in 00
+        elif stat in ['transactions', 'Test time']:
+            test_numbers = [n for n in test_numbers if n % 100 > 0]
+        # For all other stats, include all test numbers
+        else:
+            pass
+
         # OOCalc has a hard limit of 65535 characters in a single line of a
         # .csv file. Figure out where to truncate the test names so they will
         # all fit in the header row.
         trunc_length = 65000 / len(test_numbers)
-
-        # Are we dealing with any special kind of stat?
-        if stat in ['transactions-page-requests', 'Test time-page-requests']:
-            stat_type = 'request'
-        elif stat in ['transactions', 'Test time']:
-            stat_type = 'transaction'
-        else:
-            stat_type = 'normal'
 
         # Assemble the header row
         header = ['GMT']
         # Sort by test number
         for test_num in test_numbers:
             trunc_name = str(self.tests[test_num])[:trunc_length]
-            # FIXME: Clean this up
-            if stat_type == 'request' and test_num % 100 == 0:
-                header.append(trunc_name)
-            elif stat_type == 'transaction' and test_num % 100 > 0:
-                header.append(trunc_name)
-            else:
-                header.append(trunc_name)
+            header.append(trunc_name)
         # Write the header row
         csv_writer.writerow(header)
 
@@ -319,13 +316,7 @@ class Report:
             timestamp = datetime.strftime(timestamp, '%m/%d/%Y %H:%M:%S') + '.000'
             row = [timestamp]
             for test_num in test_numbers:
-                # FIXME: Clean this up
-                if stat_type == 'request' and test_num % 100 == 0:
-                    row.append(self.tests[test_num].stat_at_time(stat, this_time))
-                elif stat_type == 'transaction' and test_num % 100 > 0:
-                    row.append(self.tests[test_num].stat_at_time(stat, this_time))
-                else:
-                    row.append(self.tests[test_num].stat_at_time(stat, this_time))
+                row.append(self.tests[test_num].stat_at_time(stat, this_time))
             # Write the row
             csv_writer.writerow(row)
             # Step to the next timestamp
