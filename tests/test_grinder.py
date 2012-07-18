@@ -4,6 +4,7 @@
 """
 
 import os
+import csv
 import unittest
 from csvsee import grinder
 from . import basic_dir, data_dir, temp_filename
@@ -59,16 +60,35 @@ class TestGrinder (unittest.TestCase):
                           grinder.Report, 60, outfile)
 
 
-    def test_Report(self):
-        """Test the `Report` class.
+
+    def test_grinder_files(self):
+        """Test the `grinder_files` function.
         """
+        # Expected out* and data* filenames
         outfile = os.path.join(basic_dir, 'out_XP-0.log')
         data0 = os.path.join(basic_dir, 'data_XP-0.log')
         data1 = os.path.join(basic_dir, 'data_XP-1.log')
-        report = grinder.Report(60, outfile, data0, data1)
 
+        self.assertEqual(grinder.grinder_files(basic_dir), [
+            (outfile, [data0, data1])
+        ])
+
+        # Exception on nonexistent directory
+        self.assertRaises(ValueError, grinder.grinder_files, 'f00b4r')
+
+
+class TestGrinderReport (unittest.TestCase):
+    def setUp(self):
+        self.outfile = os.path.join(basic_dir, 'out_XP-0.log')
+        self.data0 = os.path.join(basic_dir, 'data_XP-0.log')
+        self.data1 = os.path.join(basic_dir, 'data_XP-1.log')
+
+    def test_resolution(self):
+        report = grinder.Report(60, self.outfile, self.data0, self.data1)
         self.assertEqual(report.resolution, 60)
 
+    def test_timestamp_ranges(self):
+        report = grinder.Report(60, self.outfile, self.data0, self.data1)
         # Timestamp ranges for each test number
         test_timestamp_ranges = [
             (1001, 1283195400, 1283195760),
@@ -81,48 +101,13 @@ class TestGrinder (unittest.TestCase):
         for (test_number, start, end) in test_timestamp_ranges:
             self.assertEqual(
                 report.tests[test_number].timestamp_range(), (start, end))
-
         # Overall timestamp range
         self.assertEqual(report.timestamp_range(), (1283195400, 1283195820))
 
-        # Fetching stats from tests
-        test = report.tests[1006]
-        # Averaged stats
-        self.assertEqual(test.stat_at_time('Test time', 1283195460), 2333)
-        self.assertEqual(test.stat_at_time('Test time', 1283195760), 2411)
-        self.assertEqual(test.stat_at_time('Test time', 1283195820), 2848)
-        # Summed stats
-        self.assertEqual(test.stat_at_time('Errors', 1283195460), 0)
-        self.assertEqual(test.stat_at_time('Errors', 1283195760), 0)
-        self.assertEqual(test.stat_at_time('Errors', 1283195820), 0)
-        # Transaction counts
-        self.assertEqual(test.stat_at_time('transactions', 1283195460), 12)
-        self.assertEqual(test.stat_at_time('transactions', 1283195760), 1)
-        self.assertEqual(test.stat_at_time('transactions', 1283195820), 11)
-        # Test time page requests
-        self.assertEqual(test.stat_at_time('Test time-page-requests', 1283195460), 2333)
-        self.assertEqual(test.stat_at_time('Test time-page-requests', 1283195760), 2411)
-        self.assertEqual(test.stat_at_time('Test time-page-requests', 1283195820), 2848)
-        # Fetching stats outside test's timestamp range
-        self.assertEqual(test.stat_at_time('Test time', 9999999999), 0)
-        self.assertEqual(test.stat_at_time('Errors', 9999999999), 0)
-        # Fetching unknown stat names
-        self.assertRaises(ValueError, test.stat_at_time, 'Fake Stat', 1283195460)
-
-        # Fetching stats from bins
-        bin = test.bins[1283195460]
-        self.assertEqual(bin.count, 12)
-        self.assertEqual(bin.stats, {
-            '503 Errors': 0,
-            'Errors': 0,
-            'HTTP response code': 2400,
-            'HTTP response length': 1956,
-            'Test time': 28006,
-        })
-        self.assertEqual(bin.average('HTTP response length'), 163)
-
-        # Converting tests to strings
-        self.assertEqual(str(test), '1006: Sixth test')
+    def test_write_csv(self):
+        """Test the `Report` class.
+        """
+        report = grinder.Report(60, self.outfile, self.data0, self.data1)
 
         # Writing report to a .csv file
         report_csv = temp_filename('csv')
@@ -145,18 +130,95 @@ class TestGrinder (unittest.TestCase):
         os.unlink(report_csv)
 
 
-    def test_grinder_files(self):
-        """Test the `grinder_files` function.
-        """
-        # Expected out* and data* filenames
-        outfile = os.path.join(basic_dir, 'out_XP-0.log')
+class TestGrinderTest (unittest.TestCase):
+    def setUp(self):
         data0 = os.path.join(basic_dir, 'data_XP-0.log')
         data1 = os.path.join(basic_dir, 'data_XP-1.log')
+        self.test = grinder.Test(1006, 'Sixth test', 60)
+        for filename in [data0, data1]:
+            for row in csv.DictReader(open(filename, 'r'), skipinitialspace=True):
+                if int(row['Test']) == 1006:
+                    self.test.add(row)
 
-        self.assertEqual(grinder.grinder_files(basic_dir), [
-            (outfile, [data0, data1])
-        ])
+    def test_init(self):
+        pass
 
-        # Exception on nonexistent directory
-        self.assertRaises(ValueError, grinder.grinder_files, 'f00b4r')
+    def test_add(self):
+        pass
+
+    def test_timestamp_range(self):
+        self.assertEqual(self.test.timestamp_range(), (1283195460, 1283195820))
+
+    def test_stat_at_time_averaged(self):
+        self.assertEqual(self.test.stat_at_time('Test time', 1283195460), 2333)
+        self.assertEqual(self.test.stat_at_time('Test time', 1283195760), 2411)
+        self.assertEqual(self.test.stat_at_time('Test time', 1283195820), 2848)
+
+    def test_stat_at_time_summed(self):
+        self.assertEqual(self.test.stat_at_time('Errors', 1283195460), 0)
+        self.assertEqual(self.test.stat_at_time('Errors', 1283195760), 0)
+        self.assertEqual(self.test.stat_at_time('Errors', 1283195820), 0)
+
+    def test_stat_at_time_tx_counts(self):
+        self.assertEqual(self.test.stat_at_time('transactions', 1283195460), 12)
+        self.assertEqual(self.test.stat_at_time('transactions', 1283195760), 1)
+        self.assertEqual(self.test.stat_at_time('transactions', 1283195820), 11)
+
+    def test_stat_at_time_page_requests(self):
+        self.assertEqual(self.test.stat_at_time('Test time-page-requests', 1283195460), 2333)
+        self.assertEqual(self.test.stat_at_time('Test time-page-requests', 1283195760), 2411)
+        self.assertEqual(self.test.stat_at_time('Test time-page-requests', 1283195820), 2848)
+
+    def test_stat_at_time_outside_range(self):
+        self.assertEqual(self.test.stat_at_time('Test time', 9999999999), 0)
+        self.assertEqual(self.test.stat_at_time('Errors', 9999999999), 0)
+
+    def test_stat_at_time_unknown_stat(self):
+        self.assertRaises(ValueError, self.test.stat_at_time, 'Fake Stat', 1283195460)
+
+    def test_str(self):
+        self.assertEqual(str(self.test), '1006: Sixth test')
+
+    # TODO: Separate these into a TestGrinderBin class
+    def test_bin_counts(self):
+        self.assertEqual(self.test.bins[1283195460].count, 12)
+        self.assertEqual(self.test.bins[1283195760].count, 1)
+        self.assertEqual(self.test.bins[1283195820].count, 11)
+
+    def test_bin_stats(self):
+        self.assertEqual(
+            self.test.bins[1283195460].stats,
+            {
+                '503 Errors': 0,
+                'Errors': 0,
+                'HTTP response code': 2400,
+                'HTTP response length': 1956,
+                'Test time': 28006,
+            }
+        )
+        self.assertEqual(
+            self.test.bins[1283195760].stats,
+            {
+                '503 Errors': 0,
+                'Errors': 0,
+                'HTTP response code': 200,
+                'HTTP response length': 163,
+                'Test time': 2411,
+            }
+        )
+        self.assertEqual(
+            self.test.bins[1283195820].stats,
+            {
+                '503 Errors': 0,
+                'Errors': 0,
+                'HTTP response code': 2200,
+                'HTTP response length': 1793,
+                'Test time': 31329,
+            }
+        )
+
+    def test_bin_average(self):
+        self.assertEqual(
+            self.test.bins[1283195460].average('HTTP response length'), 163)
+
 
