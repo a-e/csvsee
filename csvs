@@ -274,13 +274,13 @@ def grinder_command(args):
     This will generate one .csv file for each of several important statistics.
     """
     # Defaults
-    resolution = 60
+    granularity = 60
 
     # Get any -options
     while args and args[0].startswith('-'):
         opt = args.pop(0)
         if opt == '-seconds':
-            resolution = int(args.pop(0))
+            granularity = int(args.pop(0))
         else:
             raise UsageError("Unknown option: '%s'" % opt)
 
@@ -294,7 +294,7 @@ def grinder_command(args):
     csv_prefix = args[-1]
 
     # Generate the report
-    report = grinder.Report(resolution, out_file, *data_files)
+    report = grinder.Report(granularity, out_file, *data_files)
     report.write_all_csvs(csv_prefix)
 
 

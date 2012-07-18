@@ -46,7 +46,7 @@ class TestGrinder (unittest.TestCase):
         tst = grinder.Test(101, 'Foobared', 30)
         self.assertEqual(tst.number, 101)
         self.assertEqual(tst.name, 'Foobared')
-        self.assertEqual(tst.resolution, 30)
+        self.assertEqual(tst.granularity, 30)
         self.assertEqual(tst.timestamp_range(), (0, 0))
 
 
@@ -83,9 +83,9 @@ class TestGrinderReport (unittest.TestCase):
         self.data0 = os.path.join(basic_dir, 'data_XP-0.log')
         self.data1 = os.path.join(basic_dir, 'data_XP-1.log')
 
-    def test_resolution(self):
+    def test_granularity(self):
         report = grinder.Report(60, self.outfile, self.data0, self.data1)
-        self.assertEqual(report.resolution, 60)
+        self.assertEqual(report.granularity, 60)
 
     def test_timestamp_ranges(self):
         report = grinder.Report(60, self.outfile, self.data0, self.data1)
