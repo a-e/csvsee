@@ -288,18 +288,24 @@ class Report:
         # all fit in the header row.
         trunc_length = 65000 / len(test_numbers)
 
+        # Are we dealing with any special kind of stat?
+        if stat in ['transactions-page-requests', 'Test time-page-requests']:
+            stat_type = 'request'
+        elif stat in ['transactions', 'Test time']:
+            stat_type = 'transaction'
+        else:
+            stat_type = 'normal'
+
         # Assemble the header row
         header = ['GMT']
         # Sort by test number
         for test_num in test_numbers:
             trunc_name = str(self.tests[test_num])[:trunc_length]
             # FIXME: Clean this up
-            if stat == 'transactions-page-requests' or stat == 'Test time-page-requests':
-                if str(test_num)[::-1].find('00') == 0:
-                    header.append(trunc_name)
-            elif stat == 'transactions' or stat == 'Test time':
-                if str(test_num)[::-1].find('00') != 0:
-                    header.append(trunc_name)
+            if stat_type == 'request' and test_num % 100 == 0:
+                header.append(trunc_name)
+            elif stat_type == 'transaction' and test_num % 100 > 0:
+                header.append(trunc_name)
             else:
                 header.append(trunc_name)
         # Write the header row
@@ -314,12 +320,10 @@ class Report:
             row = [timestamp]
             for test_num in test_numbers:
                 # FIXME: Clean this up
-                if stat == 'transactions-page-requests' or stat == 'Test time-page-requests':
-                    if str(test_num)[::-1].find('00') == 0 :
-                        row.append(self.tests[test_num].stat_at_time(stat, this_time))
-                elif stat == 'transactions' or stat=='Test time':
-                    if str(test_num)[::-1].find('00') != 0 :
-                        row.append(self.tests[test_num].stat_at_time(stat, this_time))
+                if stat_type == 'request' and test_num % 100 == 0:
+                    row.append(self.tests[test_num].stat_at_time(stat, this_time))
+                elif stat_type == 'transaction' and test_num % 100 > 0:
+                    row.append(self.tests[test_num].stat_at_time(stat, this_time))
                 else:
                     row.append(self.tests[test_num].stat_at_time(stat, this_time))
             # Write the row
@@ -336,15 +340,18 @@ class Report:
             csv_filename = "%s_%s.csv" % (csv_prefix, stat.replace(' ', '_'))
             print("Writing %s" % csv_filename)
             self.write_csv(stat, csv_filename)
-        # Another file for transaction counts
+
+        # Transaction counts
         csv_filename = "%s_Transaction_count.csv" % csv_prefix
         print("Writing %s" % csv_filename)
         self.write_csv('transactions', csv_filename)
-        # Another file for transaction counts - page requests
+
+        # Transaction counts - page requests
         csv_filename = "%s_Transaction_count_page_requests_only.csv" % csv_prefix
         print("Writing %s" % csv_filename)
         self.write_csv('transactions-page-requests', csv_filename)
 
+        # Test time - page requests
         csv_filename = "%s_Test-time_page_requests_only.csv" % csv_prefix
         print("Writing %s" % csv_filename)
         self.write_csv('Test time-page-requests', csv_filename)
