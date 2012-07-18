@@ -99,6 +99,10 @@ class TestGrinder (unittest.TestCase):
         self.assertEqual(test.stat_at_time('transactions', 1283195460), 12)
         self.assertEqual(test.stat_at_time('transactions', 1283195760), 1)
         self.assertEqual(test.stat_at_time('transactions', 1283195820), 11)
+        # Test time page requests
+        self.assertEqual(test.stat_at_time('Test time-page-requests', 1283195460), 2333)
+        self.assertEqual(test.stat_at_time('Test time-page-requests', 1283195760), 2411)
+        self.assertEqual(test.stat_at_time('Test time-page-requests', 1283195820), 2848)
         # Fetching stats outside test's timestamp range
         self.assertEqual(test.stat_at_time('Test time', 9999999999), 0)
         self.assertEqual(test.stat_at_time('Errors', 9999999999), 0)
