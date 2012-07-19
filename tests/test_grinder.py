@@ -104,15 +104,12 @@ class TestGrinderReport (unittest.TestCase):
         # Overall timestamp range
         self.assertEqual(report.timestamp_range(), (1283195400, 1283195820))
 
-    def test_write_csv(self):
-        """Test the `Report` class.
-        """
+    def test_write_csv_test_time(self):
         report = grinder.Report(60, self.outfile, self.data0, self.data1)
 
-        # Writing report to a .csv file
         report_csv = temp_filename('csv')
         report.write_csv('Test time', report_csv)
-        # Ensure data matches what's expected
+
         lines = [line.rstrip() for line in open(report_csv)]
         self.assertEqual(lines, [
             'GMT,1001: First test,1002: Second test,1003: Third test,1004: Fourth test,1005: Fifth test,1006: Sixth test',
@@ -125,9 +122,48 @@ class TestGrinderReport (unittest.TestCase):
             '08/30/2010 19:16:00.000,1270,322,2196,33988,2054,2411',
             '08/30/2010 19:17:00.000,0,0,0,0,2080,2848'
         ])
-
-        # Remove temporary file
         os.unlink(report_csv)
+
+    def test_write_csv_transactions(self):
+        report = grinder.Report(60, self.outfile, self.data0, self.data1)
+
+        report_csv = temp_filename('csv')
+        report.write_csv('transactions', report_csv)
+
+        lines = [line.rstrip() for line in open(report_csv)]
+        self.assertEqual(lines, [
+            'GMT,1001: First test,1002: Second test,1003: Third test,1004: Fourth test,1005: Fifth test,1006: Sixth test',
+            '08/30/2010 19:10:00.000,12,12,12,12,0,0',
+            '08/30/2010 19:11:00.000,0,0,0,0,12,12',
+            '08/30/2010 19:12:00.000,0,0,0,0,0,0',
+            '08/30/2010 19:13:00.000,0,0,0,0,0,0',
+            '08/30/2010 19:14:00.000,0,0,0,0,0,0',
+            '08/30/2010 19:15:00.000,0,0,0,0,0,0',
+            '08/30/2010 19:16:00.000,12,12,12,12,2,1',
+            '08/30/2010 19:17:00.000,0,0,0,0,10,11',
+        ])
+        os.unlink(report_csv)
+
+    def test_write_csv_page_requests(self):
+        report = grinder.Report(60, self.outfile, self.data0, self.data1)
+
+        report_csv = temp_filename('csv')
+        report.write_csv('transactions-page-requests', report_csv)
+
+        lines = [line.rstrip() for line in open(report_csv)]
+        self.assertEqual(lines, [
+            'GMT,1000: First page',
+            '08/30/2010 19:10:00.000,13',
+            '08/30/2010 19:11:00.000,0',
+            '08/30/2010 19:12:00.000,0',
+            '08/30/2010 19:13:00.000,0',
+            '08/30/2010 19:14:00.000,0',
+            '08/30/2010 19:15:00.000,0',
+            '08/30/2010 19:16:00.000,12',
+            '08/30/2010 19:17:00.000,0'
+        ])
+        os.unlink(report_csv)
+
 
 
 class TestGrinderTest (unittest.TestCase):
@@ -179,7 +215,6 @@ class TestGrinderTest (unittest.TestCase):
     def test_str(self):
         self.assertEqual(str(self.test), '1006: Sixth test')
 
-    # TODO: Separate these into a TestGrinderBin class
     def test_bin_counts(self):
         self.assertEqual(self.test.bins[1283195460].count, 12)
         self.assertEqual(self.test.bins[1283195760].count, 1)
@@ -221,4 +256,39 @@ class TestGrinderTest (unittest.TestCase):
         self.assertEqual(
             self.test.bins[1283195460].average('HTTP response length'), 163)
 
+
+class TestGrinderBin (unittest.TestCase):
+    def test_init(self):
+        stat_dict = {'Errors': 0, 'HTTP response length': 0, 'Test time': 0}
+        stat_names = stat_dict.keys()
+        bin = grinder.Bin(stat_names)
+        self.assertEqual(bin.stats, stat_dict)
+        self.assertEqual(bin.count, 0)
+
+    def test_add(self):
+        stat_names = ['Errors', 'Muffins']
+        bin = grinder.Bin(stat_names)
+        bin.add({'Errors': 1, 'Muffins': 2})
+        self.assertEqual(bin.count, 1)
+        self.assertEqual(bin.stats, {'Errors': 1, 'Muffins': 2})
+        bin.add({'Errors': 0, 'Muffins': 3})
+        self.assertEqual(bin.count, 2)
+        self.assertEqual(bin.stats, {'Errors': 1, 'Muffins': 5})
+        bin.add({'Errors': 2, 'Muffins': 1})
+        self.assertEqual(bin.count, 3)
+        self.assertEqual(bin.stats, {'Errors': 3, 'Muffins': 6})
+        bin.add({'Errors': 0, 'Muffins': 0})
+        self.assertEqual(bin.count, 4)
+        self.assertEqual(bin.stats, {'Errors': 3, 'Muffins': 6})
+
+    def test_average(self):
+        stat_names = ['Errors', 'Muffins']
+        bin = grinder.Bin(stat_names)
+        self.assertEqual(bin.average('Errors'), 0)
+        self.assertEqual(bin.average('Muffins'), 0)
+        bin.add({'Errors': 1, 'Muffins': 2})
+        bin.add({'Errors': 2, 'Muffins': 4})
+        bin.add({'Errors': 1, 'Muffins': 6})
+        self.assertEqual(bin.average('Errors'), 1)
+        self.assertEqual(bin.average('Muffins'), 4)
 

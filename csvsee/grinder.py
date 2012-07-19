@@ -189,7 +189,7 @@ class Test:
         elif stat in Test.average_stats:
             return (bin.stats[stat] / bin.count)
         # Special handling for transaction count
-        elif stat == 'transactions' or stat == 'transactions-page-requests':
+        elif stat in ['transactions', 'transactions-page-requests']:
             return bin.count
         elif stat == 'Test time-page-requests':
             return (bin.stats['Test time'] / bin.count)
