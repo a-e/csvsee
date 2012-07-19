@@ -20,14 +20,39 @@ class TestGrinderTest (unittest.TestCase):
         self.assertEqual(test.number, 101)
         self.assertEqual(test.name, 'Foobared')
         self.assertEqual(test.granularity, 30)
+        self.assertEqual(test.bins, {})
 
 
     def test_add(self):
-        pass
+        def row(start_time, errors, errors_503, http_response_code, http_response_length, test_time):
+            return {
+                'Start time (ms since Epoch)': start_time,
+                'Errors': errors,
+                '503 Errors': errors_503,
+                'HTTP response code': http_response_code,
+                'HTTP response length': http_response_length,
+                'Test time': test_time,
+            }
+        test = grinder.Test(1007, 'Seventh test', 1)
+        self.assertEqual(test.bins, {})
+        test.add(row('15001', '1', '0', '200', '1000', '20'))
+        test.add(row('15002', '2', '0', '200', '1000', '30'))
+        test.add(row('15003', '3', '1', '200', '1000', '40'))
+        self.assertIn(15, test.bins)
+        self.assertIsInstance(test.bins[15], grinder.Bin)
+        self.assertEqual(test.bins[15].count, 3)
+        self.assertEqual(test.bins[15].stats['Errors'], 6)
+        self.assertEqual(test.bins[15].stats['Test time'], 90)
+        self.assertEqual(test.bins[15].stats['HTTP response length'], 3000)
 
 
     def test_timestamp_range(self):
         self.assertEqual(self.test.timestamp_range(), (1283195460, 1283195820))
+
+
+    def test_timestamp_range_empty(self):
+        empty_test = grinder.Test(1005, 'Fifth test', 60)
+        self.assertEqual(empty_test.timestamp_range(), (0, 0))
 
 
     def test_stat_at_time_averaged(self):

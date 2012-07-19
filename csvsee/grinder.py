@@ -100,6 +100,9 @@ class Bin:
         All statistics are accumulated as integers.
         """
         for stat in self.stats:
+            # FIXME: Tally up all HTTP response codes instead of only checking
+            # for this one (since it makes no sense to add numeric HTTP
+            # response codes together)
             if stat == '503 Errors':
                 if row['HTTP response code'].find('503') >= 0:
                     self.stats[stat] += 1
