@@ -12,86 +12,11 @@ visualizing data in comma-separated (CSV) files.
 .. _CSVSee: http://www.automation-excellence.com/software/csvsee
 
 
-Motivation
-----------
-This tool was originally developed to help with analyzing test results coming
-from Grinder_ and Performance Monitor. It was partly inspired by `Grinder
-Analyzer`_, which serves a similar purpose in a more specific domain.
-
-.. _Grinder: http://grinder.sourceforge.net/
-.. _Grinder Analyzer: http://track.sourceforge.net/
-
-
-Features
---------
-* Generate graphs of just about any numerical data, particularly those having timestamps
-* Match one or more CSV column names with regular expressions
-* Plot the top ``N`` data sets, by average or peak value within each column
-* Automatic color-coding when graphing multiple columns
-* Display graphs in an interactive viewer with zooming/panning capability
-* Export graphs to a ``.png``, ``.svg`` or ``.pdf`` file
-* Customizable line styles, title / axis labels, and timestamp formats
-* Automatic guessing of date/time format
-
-
 License
 -------
 This software is open source, under the terms of the `simplified BSD license`_.
 
 .. _simplified BSD license: http://www.opensource.org/licenses/bsd-license.php
-
-
-Installation
-------------
-
-You'll need Python_ before doing anything else. Most Linux distributions already
-have this installed, but you can use this to check::
-
-    $ which python
-    /usr/bin/python
-
-Install pip_ too::
-
-    $ sudo apt-get install python-pip
-
-To use the graphing features of CSVSee, you'll need NumPy_ and matplotlib_.
-These require some development headers in order to install properly; on Ubuntu,
-this should work::
-
-    $ sudo apt-get install python-dev libpng-dev
-
-Then::
-
-    $ pip install -r req.txt
-
-If you want to install an official release, first download one from the
-`downloads page`_, and extract it somewhere.
-
-Then, open that directory in a terminal and run::
-
-    $ sudo python setup.py install
-
-Or use pip_::
-
-    $ sudo pip install .
-
-One advantage of using ``pip`` is that you can uninstall later like so::
-
-    $ sudo pip uninstall CSVSee
-
-If you'd rather use a copy of the latest development version, clone it using
-Git_::
-
-    $ git clone git://github.com/a-e/csvsee.git
-
-then install as before using ``setup.py`` or ``pip``.
-
-.. _downloads page: https://launchpad.net/csvsee/+download
-.. _Git: http://git-scm.com/
-.. _pip: http://pypi.python.org/pypi/pip
-.. _Python: http://python.org/download/
-.. _matplotlib: http://sourceforge.net/projects/matplotlib/files/matplotlib/matplotlib-0.99.1/
-.. _NumPy: http://sourceforge.net/projects/numpy/files/
 
 
 Usage
@@ -102,7 +27,9 @@ usage notes and integrated help, or see the documentation below:
 .. toctree::
     :maxdepth: 2
 
-    csvs
+    about
+    install
+    usage
 
 
 API

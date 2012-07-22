@@ -1,5 +1,5 @@
-csvs
-====
+Usage
+=====
 
 ``csvs`` is the primary frontend for CSVSee. You can run this without arguments
 to see what it expects. At minimum, you'll need to provide the name of a
