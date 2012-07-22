@@ -46,8 +46,9 @@ def column_names(csv_file):
 
 def strip_prefix(strings):
     """Strip a common prefix from a sequence of strings.
-    Return ``(prefix, [stripped])`` where ``prefix`` is the string that
-    is common, and ``[stripped]`` is all strings with the prefix removed.
+    Return ``(prefix, [stripped])`` where ``prefix`` is the string that is
+    common (with leading and trailing whitespace removed), and ``[stripped]``
+    is all strings with the prefix removed.
 
     Examples::
 
@@ -55,7 +56,7 @@ def strip_prefix(strings):
         ('f', ['irst', 'ourth', 'ifth'])
 
         >>> strip_prefix(['spam and eggs', 'spam and potatoes', 'spam and spam'])
-        ('spam and ', ['eggs', 'potatoes', 'spam'])
+        ('spam and', ['eggs', 'potatoes', 'spam'])
 
     """
     prefix = ''
@@ -70,7 +71,7 @@ def strip_prefix(strings):
     # Keep everything after the index where the strings diverge
     index = len(prefix)
     stripped = [s[index:] for s in strings]
-    return (prefix, stripped)
+    return (prefix.strip(), stripped)
 
 
 def grep_files(filenames, matches, dateformat='guess', resolution=60,

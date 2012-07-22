@@ -38,6 +38,7 @@ class TestGrinder (unittest.TestCase):
             (outfile, [data0, data1])
         ])
 
+    def test_grinder_files_exception(self):
         # Exception on nonexistent directory
         self.assertRaises(ValueError, grinder.grinder_files, 'f00b4r')
 

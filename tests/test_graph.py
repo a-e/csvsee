@@ -4,6 +4,7 @@
 """
 
 import os
+import sys
 import unittest
 from csvsee import graph, utils
 from . import csv_dir, temp_filename
@@ -74,4 +75,13 @@ class TestGraph (unittest.TestCase):
         g = graph.Graph(self.csv_file)
         g['x'] = 'Nonexistent column'
         self.assertRaises(utils.NoMatch, g.generate)
+
+    def test_ylabel_prefix(self):
+        """The ylabel = 'prefix' option uses the common column prefix
+        as the y-axis label
+        """
+        g = graph.Graph(self.csv_file)
+        g['ylabel'] = 'prefix'
+        g.generate()
+        self.assertEqual(g.axes.get_ylabel(), 'Request')
 

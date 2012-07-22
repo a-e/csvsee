@@ -16,13 +16,15 @@ class TestGrinderReport (unittest.TestCase):
         hasn't finished writing test names to the end).
         """
         outfile = os.path.join(data_dir, 'incomplete', 'incomplete.log')
-        self.assertRaises(grinder.NoTestNames,
-                          grinder.Report, 60, outfile)
+        self.assertRaises(grinder.NoTestNames, grinder.Report, 60, outfile)
 
 
     def test_granularity(self):
         report = grinder.Report(60, self.outfile, self.data0, self.data1)
         self.assertEqual(report.granularity, 60)
+
+        report = grinder.Report(1, self.outfile, self.data0, self.data1)
+        self.assertEqual(report.granularity, 1)
 
 
     def test_timestamp_ranges(self):
@@ -114,8 +116,23 @@ class TestGrinderReport (unittest.TestCase):
         os.unlink(report_csv)
 
 
-    def test_write_csvs(self):
-        pass
-
-
+    def test_write_all_csvs(self):
+        report = grinder.Report(60, self.outfile, self.data0, self.data1)
+        csv_prefix = temp_filename()
+        report.write_all_csvs(csv_prefix)
+        expect_csv_suffixes = [
+            'Errors',
+            'HTTP_response_code',
+            'HTTP_response_length',
+            'Test_time',
+            'Test-time_page_requests_only',
+            'Transaction_count',
+            'Transaction_count_page_requests_only',
+        ]
+        expect_csv_files = [
+            "%s_%s.csv" % (csv_prefix, suffix)
+            for suffix in expect_csv_suffixes
+        ]
+        for filename in expect_csv_files:
+            self.assertTrue(os.path.isfile(filename))
 
