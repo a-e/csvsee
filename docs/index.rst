@@ -17,6 +17,7 @@ This software is open source, under the terms of the `simplified BSD license`_.
     about
     install
     usage
+    development
     api
 
 .. _CSVSee: http://www.automation-excellence.com/software/csvsee
