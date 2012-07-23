@@ -157,7 +157,7 @@ class Test:
         """Add a row of statistics for this test.
         """
         # Convert timestamp to seconds
-        timestamp  = int(row['Start time (ms since Epoch)']) / 1000
+        timestamp = int(row['Start time (ms since Epoch)']) / 1000
         # Truncate the timestamp to the current granularity
         if self.granularity > 1:
             timestamp = (timestamp / self.granularity) * self.granularity

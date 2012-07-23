@@ -261,7 +261,7 @@ class TestUtils (unittest.TestCase):
                0,4,123,8
             """)
         boring = utils.boring_columns(filename)
-        self.assertEqual(boring, ['Lame','Pointless'])
+        self.assertEqual(boring, ['Lame', 'Pointless'])
 
         # Remove the temporary file
         os.unlink(filename)

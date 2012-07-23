@@ -113,8 +113,9 @@ class Graph (object):
             self['dateformat'] = self.guess_date_format(x_column)
 
         # Read each row in the .csv file and populate x and y value lists
-        x_values, y_values = utils.read_xy_values(reader,
-            x_column, y_columns, self['dateformat'], self['gmtoffset'], self['zerotime'])
+        x_values, y_values = utils.read_xy_values(
+            reader, x_column, y_columns,
+            self['dateformat'], self['gmtoffset'], self['zerotime'])
 
         # Create the figure and plot
         self.figure = pylab.figure()
@@ -170,7 +171,8 @@ class Graph (object):
         if self['truncate'] > 0:
             labels = [label[0:self['truncate']] for label in labels]
 
-        self.legend = pylab.legend(lines, labels,
+        self.legend = pylab.legend(
+            lines, labels,
             loc='upper center', bbox_to_anchor=(0.5, -0.15),
             prop={'size': 9}, ncol=3)
 

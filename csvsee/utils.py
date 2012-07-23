@@ -179,7 +179,7 @@ def top_by(func, count, y_columns, y_values, drop=0):
         results.append((f_ys, y_name))
     # Keep the top ``count`` after dropping ``drop`` values
     sorted_columns = [y_name for (f_ys, y_name) in reversed(sorted(results))]
-    return sorted_columns[drop:drop+count]
+    return sorted_columns[drop:drop + count]
 
 
 def top_by_average(count, y_columns, y_values, drop=0):
